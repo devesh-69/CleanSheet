@@ -1,0 +1,5 @@
+{
+  "name": "Excel Duplicate Remover",
+  "description": "A modern, responsive web application that helps users identify and remove duplicates by comparing two spreadsheet files directly in the browser.",
+  "requestFramePermissions": []
+}
