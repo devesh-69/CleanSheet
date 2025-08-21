@@ -1,4 +1,3 @@
-
 import { ComparisonOptions, DuplicateResult, ParsedFile } from '../types';
 
 declare const XLSX: any;
@@ -37,14 +36,28 @@ export const findDuplicates = (
   }
 
   const duplicates: Record<string, any>[] = [];
-  const cleanedData: Record<string, any>[] = [];
+  const cleanDataCandidates: Record<string, any>[] = [];
 
+  // First, separate rows from the comparison file into two groups:
+  // 1. Duplicates: rows that are also present in the main file.
+  // 2. Clean Data Candidates: rows that are not in the main file.
   for (const row of comparisonFile.data) {
     const key = generateCompositeKey(row, selectedColumns, options);
     if (mainFileKeys.has(key)) {
       duplicates.push(row);
     } else {
+      cleanDataCandidates.push(row);
+    }
+  }
+
+  // Second, process the clean data candidates to remove any intra-file duplicates from this set.
+  const cleanedData: Record<string, any>[] = [];
+  const cleanedDataKeys = new Set<string>();
+  for (const row of cleanDataCandidates) {
+    const key = generateCompositeKey(row, selectedColumns, options);
+    if (!cleanedDataKeys.has(key)) {
       cleanedData.push(row);
+      cleanedDataKeys.add(key);
     }
   }
 
@@ -58,7 +71,8 @@ export const findDuplicates = (
 
 export const exportFile = (data: Record<string, any>[], fileName: string, format: 'xlsx' | 'csv') => {
     if (data.length === 0) {
-        alert("No data to export.");
+        // This case should be prevented by disabling the download buttons in the UI.
+        console.warn("Export attempted with no data.");
         return;
     }
 

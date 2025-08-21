@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DuplicateResult, ParsedFile } from '../types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/Card';
@@ -10,10 +9,11 @@ interface ResultsDisplayProps {
   results: DuplicateResult;
   comparisonFile: ParsedFile;
   onRestart: () => void;
+  compareOnly?: boolean;
 }
 
-export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, comparisonFile, onRestart }) => {
-  const [activeTab, setActiveTab] = useState<'duplicates' | 'cleaned'>('duplicates');
+export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, comparisonFile, onRestart, compareOnly = false }) => {
+  const [activeTab, setActiveTab] = useState<'duplicates' | 'cleaned'>(compareOnly ? 'duplicates' : 'duplicates');
 
   const headers = comparisonFile.headers;
   const dataToDisplay = activeTab === 'duplicates' ? results.duplicates : results.cleanedData;
@@ -24,6 +24,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, compari
   const paginatedData = dataToDisplay.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
   const handleDownload = (format: 'xlsx' | 'csv') => {
+    if (compareOnly) return;
     const originalName = comparisonFile.name.split('.')[0];
     const fileName = `${originalName}_cleaned.${format}`;
     exportFile(results.cleanedData, fileName, format);
@@ -49,19 +50,20 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, compari
                         Duplicates Found <span className="bg-red-100 text-red-800 text-xs font-medium ml-2 px-2.5 py-0.5 rounded-full">{results.duplicates.length}</span>
                     </button>
                     <button
-                        onClick={() => { setActiveTab('cleaned'); setCurrentPage(1); }}
-                        className={`${activeTab === 'cleaned' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                        onClick={() => { if (!compareOnly) { setActiveTab('cleaned'); setCurrentPage(1); } }}
+                        disabled={compareOnly}
+                        className={`${activeTab === 'cleaned' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
                         Cleaned Data <span className="bg-green-100 text-green-800 text-xs font-medium ml-2 px-2.5 py-0.5 rounded-full">{results.cleanedData.length}</span>
                     </button>
                 </nav>
             </div>
             <div className="flex space-x-2">
-              <Button variant="secondary" onClick={() => handleDownload('csv')}>
+              <Button variant="secondary" onClick={() => handleDownload('csv')} disabled={results.cleanedData.length === 0 || compareOnly}>
                 <DownloadIcon className="w-4 h-4 mr-2"/>
                 Download CSV
               </Button>
-              <Button onClick={() => handleDownload('xlsx')}>
+              <Button onClick={() => handleDownload('xlsx')} disabled={results.cleanedData.length === 0 || compareOnly}>
                 <DownloadIcon className="w-4 h-4 mr-2"/>
                 Download XLSX
               </Button>
@@ -89,6 +91,13 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, compari
                   ))}
                 </tr>
               ))}
+               {paginatedData.length === 0 && (
+                    <tr>
+                        <td colSpan={headers.length} className="text-center py-10 text-gray-500">
+                            No data to display in this tab.
+                        </td>
+                    </tr>
+                )}
             </tbody>
           </table>
         </div>
