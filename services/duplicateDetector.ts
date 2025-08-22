@@ -1,8 +1,5 @@
 import { ComparisonOptions, DuplicateResult, ParsedFile } from '../types';
 
-declare const XLSX: any;
-declare const Papa: any;
-
 const generateCompositeKey = (row: Record<string, any>, columns: string[], options: ComparisonOptions): string => {
   return columns
     .map((col) => {
@@ -69,28 +66,34 @@ export const findDuplicates = (
   };
 };
 
-export const exportFile = (data: Record<string, any>[], fileName: string, format: 'xlsx' | 'csv') => {
-    if (data.length === 0) {
-        // This case should be prevented by disabling the download buttons in the UI.
-        console.warn("Export attempted with no data.");
-        return;
-    }
+export const findDuplicatesInSingleFile = (
+  file: ParsedFile,
+  selectedColumns: string[],
+  options: ComparisonOptions
+): DuplicateResult => {
+  if (selectedColumns.length === 0) {
+    // If no columns are selected, consider everything unique.
+    return { duplicates: [], cleanedData: file.data, totalDuplicates: 0, totalRowsProcessed: file.rowCount };
+  }
 
-    if (format === 'xlsx') {
-        const worksheet = XLSX.utils.json_to_sheet(data);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Cleaned Data");
-        XLSX.writeFile(workbook, fileName);
-    } else if (format === 'csv') {
-        const csv = Papa.unparse(data);
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", fileName);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+  const duplicates: Record<string, any>[] = [];
+  const cleanedData: Record<string, any>[] = [];
+  const seenKeys = new Set<string>();
+
+  for (const row of file.data) {
+    const key = generateCompositeKey(row, selectedColumns, options);
+    if (seenKeys.has(key)) {
+      duplicates.push(row);
+    } else {
+      cleanedData.push(row);
+      seenKeys.add(key);
     }
+  }
+
+  return {
+    duplicates,
+    cleanedData,
+    totalDuplicates: duplicates.length,
+    totalRowsProcessed: file.rowCount,
+  };
 };

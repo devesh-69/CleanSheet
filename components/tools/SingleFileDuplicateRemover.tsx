@@ -1,39 +1,96 @@
 import React, { useState } from 'react';
-import { ParsedFile } from '../../types';
+import { ParsedFile, ComparisonOptions, DuplicateResult, AppStep } from '../../types';
 import { FileUploader } from '../FileUploader';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '../ui/Card';
-import { Button } from '../ui/Button';
-
-const cleaningOptions = [
-    { id: 'blankRows', label: 'Remove Blank Rows/Columns' },
-    { id: 'trimSpaces', label: 'Trim Extra Spaces' },
-    { id: 'standardizeCase', label: 'Standardize Case (Proper)' },
-    { id: 'formatDate', label: 'Date Formatter' },
-    { id: 'formatNumber', label: 'Number Formatter' },
-    { id: 'highlightDuplicates', label: 'Highlight Duplicates' },
-    { id: 'extractUniques', label: 'Extract Unique Values' },
-];
+import { ColumnSelector } from '../ColumnSelector';
+import { ResultsDisplay } from '../ResultsDisplay';
+import { findDuplicatesInSingleFile } from '../../services/duplicateDetector';
+import { SpinnerIcon } from '../ui/Icons';
 
 const SingleFileDuplicateRemover: React.FC = () => {
+    const [step, setStep] = useState<AppStep>(AppStep.UPLOAD);
     const [file, setFile] = useState<ParsedFile | null>(null);
-    const [error, setError] = useState<string | null>(null);
-    const [selectedOptions, setSelectedOptions] = useState<Set<string>>(new Set(['trimSpaces']));
+    const [results, setResults] = useState<DuplicateResult | null>(null);
 
     const handleFileUpload = (uploadedFile: ParsedFile | null, uploadError: string | null) => {
-        setFile(uploadedFile);
-        setError(uploadError);
+        if (uploadedFile) {
+            setFile(uploadedFile);
+            setStep(AppStep.SELECT_COLUMNS);
+        }
     };
 
-    const handleOptionToggle = (optionId: string) => {
-        setSelectedOptions(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(optionId)) {
-                newSet.delete(optionId);
-            } else {
-                newSet.add(optionId);
-            }
-            return newSet;
-        });
+    const handleProcess = (selectedColumns: string[], options: ComparisonOptions) => {
+        if (file) {
+            setStep(AppStep.PROCESSING);
+            setTimeout(() => {
+                const duplicateResults = findDuplicatesInSingleFile(file, selectedColumns, options);
+                setResults(duplicateResults);
+                setStep(AppStep.RESULTS);
+            }, 500);
+        }
+    };
+
+    const handleRestart = () => {
+        setStep(AppStep.UPLOAD);
+        setFile(null);
+        setResults(null);
+    };
+
+    const renderContent = () => {
+        switch (step) {
+            case AppStep.UPLOAD:
+                return (
+                    <FileUploader
+                        id="single-file"
+                        title="Upload File"
+                        description="Upload the spreadsheet you want to clean."
+                        onFileUpload={handleFileUpload}
+                    />
+                );
+            case AppStep.SELECT_COLUMNS:
+                if (file) {
+                    return (
+                        <ColumnSelector
+                            comparisonFile={file}
+                            onCompare={handleProcess}
+                            onBack={handleRestart}
+                        />
+                    );
+                }
+                return null;
+            case AppStep.PROCESSING:
+                return (
+                    <div className="flex flex-col items-center justify-center text-center p-8 bg-white rounded-lg shadow-md">
+                        <SpinnerIcon className="w-12 h-12 text-blue-600 mb-4" />
+                        <h2 className="text-xl font-semibold text-gray-800">Finding Duplicates...</h2>
+                        <p className="text-gray-500 mt-2">Please wait while we process your file.</p>
+                    </div>
+                );
+            case AppStep.RESULTS:
+                if (results && file) {
+                    return (
+                         <ResultsDisplay
+                            title="Processing Results"
+                            description={
+                                <>
+                                Found <span className="font-bold text-blue-600">{results.totalDuplicates}</span> duplicates in{' '}
+                                <span className="font-bold">{file.name}</span>.
+                                </>
+                            }
+                            headers={file.headers}
+                            tabs={[
+                                { title: 'Duplicates Found', data: results.duplicates, badgeType: 'danger' },
+                                { title: 'Cleaned Data', data: results.cleanedData, badgeType: 'success' },
+                            ]}
+                            downloadableData={results.cleanedData}
+                            fileForExportName={file.name}
+                            onRestart={handleRestart}
+                        />
+                    );
+                }
+                return null;
+            default:
+                return null;
+        }
     };
 
     return (
@@ -41,49 +98,11 @@ const SingleFileDuplicateRemover: React.FC = () => {
              <header className="text-center">
                 <h1 className="text-4xl font-bold tracking-tight text-primary dark:text-white">Single File Duplicate Remover</h1>
                 <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
-                    Upload a single spreadsheet to find and remove duplicate rows, with optional cleaning actions.
+                    Upload a single spreadsheet to find and remove duplicate rows based on selected columns.
                 </p>
             </header>
             
-            {!file && (
-                 <FileUploader
-                    id="single-file"
-                    title="Upload File"
-                    description="Upload the spreadsheet you want to clean."
-                    onFileUpload={handleFileUpload}
-                />
-            )}
-
-            {file && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Optional Cleaning Actions</CardTitle>
-                        <CardDescription>Select additional cleaning steps to apply to your file: <span className="font-semibold">{file.name}</span></CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {cleaningOptions.map(option => (
-                                <div key={option.id} className="flex items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                    <input
-                                        type="checkbox"
-                                        id={option.id}
-                                        checked={selectedOptions.has(option.id)}
-                                        onChange={() => handleOptionToggle(option.id)}
-                                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                    />
-                                    <label htmlFor={option.id} className="ml-3 block text-sm text-gray-700 dark:text-gray-300">
-                                        {option.label}
-                                    </label>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                    <CardFooter className="flex justify-between">
-                        <Button variant="secondary" onClick={() => setFile(null)}>Upload Different File</Button>
-                        <Button>Process File</Button>
-                    </CardFooter>
-                </Card>
-            )}
+            {renderContent()}
         </div>
     );
 };

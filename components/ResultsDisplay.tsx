@@ -1,73 +1,92 @@
 import React, { useState } from 'react';
-import { DuplicateResult, ParsedFile } from '../types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/Card';
 import { Button } from './ui/Button';
 import { DownloadIcon } from './ui/Icons';
-import { exportFile } from '../services/duplicateDetector';
+import { exportFile } from '../services/fileProcessor';
 
-interface ResultsDisplayProps {
-  results: DuplicateResult;
-  comparisonFile: ParsedFile;
-  onRestart: () => void;
-  compareOnly?: boolean;
+interface ResultTab {
+    title: string;
+    data: Record<string, any>[];
+    badgeType?: 'success' | 'danger' | 'default';
 }
 
-export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, comparisonFile, onRestart, compareOnly = false }) => {
-  const [activeTab, setActiveTab] = useState<'duplicates' | 'cleaned'>(compareOnly ? 'duplicates' : 'duplicates');
+interface ResultsDisplayProps {
+  title: string;
+  description: React.ReactNode;
+  headers: string[];
+  tabs: ResultTab[];
+  downloadableData: Record<string, any>[] | null;
+  fileForExportName: string;
+  onRestart: () => void;
+  restartButtonText?: string;
+}
 
-  const headers = comparisonFile.headers;
-  const dataToDisplay = activeTab === 'duplicates' ? results.duplicates : results.cleanedData;
-  const totalRows = dataToDisplay.length;
+const Badge: React.FC<{ type: ResultTab['badgeType'], count: number }> = ({ type, count }) => {
+    const baseClasses = "text-xs font-medium ml-2 px-2.5 py-0.5 rounded-full";
+    const styles = {
+        danger: "bg-red-100 text-red-800",
+        success: "bg-green-100 text-green-800",
+        default: "bg-blue-100 text-blue-800",
+    }
+    return <span className={`${baseClasses} ${styles[type || 'default']}`}>{count}</span>
+}
+
+export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ 
+    title, description, headers, tabs, downloadableData, fileForExportName, onRestart, restartButtonText = "Start Over" 
+}) => {
+  const [activeTabIndex, setActiveTabIndex] = useState(0);
+
+  const activeTabData = tabs[activeTabIndex]?.data || [];
+  const totalRows = activeTabData.length;
   const rowsPerPage = 10;
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.ceil(totalRows / rowsPerPage);
-  const paginatedData = dataToDisplay.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
+  const paginatedData = activeTabData.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
   const handleDownload = (format: 'xlsx' | 'csv') => {
-    if (compareOnly) return;
-    const originalName = comparisonFile.name.split('.')[0];
-    const fileName = `${originalName}_cleaned.${format}`;
-    exportFile(results.cleanedData, fileName, format);
+    if (!downloadableData) return;
+    const originalName = fileForExportName.split('.')[0];
+    const fileName = `${originalName}_processed.${format}`;
+    exportFile(downloadableData, fileName, format);
   };
+
+  const showTabs = tabs.length > 1;
 
   return (
     <Card className="w-full max-w-6xl mx-auto">
       <CardHeader>
-        <CardTitle>Comparison Results</CardTitle>
-        <CardDescription>
-          Found <span className="font-bold text-blue-600">{results.totalDuplicates}</span> duplicates in{' '}
-          <span className="font-bold">{comparisonFile.name}</span> out of {results.totalRowsProcessed} total rows.
-        </CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex justify-between items-center mb-4">
-            <div className="border-b border-gray-200">
-                <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-                    <button
-                        onClick={() => { setActiveTab('duplicates'); setCurrentPage(1); }}
-                        className={`${activeTab === 'duplicates' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                    >
-                        Duplicates Found <span className="bg-red-100 text-red-800 text-xs font-medium ml-2 px-2.5 py-0.5 rounded-full">{results.duplicates.length}</span>
-                    </button>
-                    <button
-                        onClick={() => { if (!compareOnly) { setActiveTab('cleaned'); setCurrentPage(1); } }}
-                        disabled={compareOnly}
-                        className={`${activeTab === 'cleaned' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
-                    >
-                        Cleaned Data <span className="bg-green-100 text-green-800 text-xs font-medium ml-2 px-2.5 py-0.5 rounded-full">{results.cleanedData.length}</span>
-                    </button>
-                </nav>
-            </div>
-            <div className="flex space-x-2">
-              <Button variant="secondary" onClick={() => handleDownload('csv')} disabled={results.cleanedData.length === 0 || compareOnly}>
-                <DownloadIcon className="w-4 h-4 mr-2"/>
-                Download CSV
-              </Button>
-              <Button onClick={() => handleDownload('xlsx')} disabled={results.cleanedData.length === 0 || compareOnly}>
-                <DownloadIcon className="w-4 h-4 mr-2"/>
-                Download XLSX
-              </Button>
-            </div>
+        <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
+            {showTabs && (
+                <div className="border-b border-gray-200">
+                    <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                        {tabs.map((tab, index) => (
+                             <button
+                                key={tab.title}
+                                onClick={() => { setActiveTabIndex(index); setCurrentPage(1); }}
+                                className={`${activeTabIndex === index ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                            >
+                                {tab.title} <Badge type={tab.badgeType} count={tab.data.length} />
+                            </button>
+                        ))}
+                    </nav>
+                </div>
+            )}
+            {downloadableData && (
+                <div className={`flex space-x-2 ${!showTabs ? 'w-full justify-end' : ''}`}>
+                <Button variant="secondary" onClick={() => handleDownload('csv')} disabled={downloadableData.length === 0}>
+                    <DownloadIcon className="w-4 h-4 mr-2"/>
+                    Download CSV
+                </Button>
+                <Button onClick={() => handleDownload('xlsx')} disabled={downloadableData.length === 0}>
+                    <DownloadIcon className="w-4 h-4 mr-2"/>
+                    Download XLSX
+                </Button>
+                </div>
+            )}
         </div>
         
         <div className="overflow-x-auto border rounded-lg">
@@ -85,8 +104,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, compari
               {paginatedData.map((row, rowIndex) => (
                 <tr key={rowIndex} className="hover:bg-gray-50">
                   {headers.map(header => (
-                    <td key={header} className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 truncate max-w-xs">
-                      {String(row[header])}
+                    <td key={header} className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 truncate max-w-xs" title={String(row[header] ?? '')}>
+                      {String(row[header] ?? '')}
                     </td>
                   ))}
                 </tr>
@@ -94,7 +113,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, compari
                {paginatedData.length === 0 && (
                     <tr>
                         <td colSpan={headers.length} className="text-center py-10 text-gray-500">
-                            No data to display in this tab.
+                            No data to display in this view.
                         </td>
                     </tr>
                 )}
@@ -126,7 +145,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, compari
 
       </CardContent>
       <CardFooter className="flex justify-end">
-        <Button onClick={onRestart}>Start New Comparison</Button>
+        <Button onClick={onRestart}>{restartButtonText}</Button>
       </CardFooter>
     </Card>
   );

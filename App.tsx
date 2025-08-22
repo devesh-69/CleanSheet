@@ -4,6 +4,11 @@ import { Tool } from './types';
 import CompareFilesTool from './components/tools/CompareFilesTool';
 import SingleFileDuplicateRemover from './components/tools/SingleFileDuplicateRemover';
 import PlaceholderTool from './components/tools/PlaceholderTool';
+import SpecialCharsTool from './components/tools/SpecialCharsTool';
+import FindReplaceTool from './components/tools/FindReplaceTool';
+import MergeFilesTool from './components/tools/MergeFilesTool';
+import CompareColumnsTool from './components/tools/CompareColumnsTool';
+import QuickSummaryTool from './components/tools/QuickSummaryTool';
 
 
 const App: React.FC = () => {
@@ -16,15 +21,15 @@ const App: React.FC = () => {
       case Tool.SINGLE_FILE_DUPLICATES:
         return <SingleFileDuplicateRemover />;
       case Tool.SPECIAL_CHARS:
-        return <PlaceholderTool title="Special Characters Remover" />;
+        return <SpecialCharsTool />;
       case Tool.FIND_REPLACE:
-        return <PlaceholderTool title="Find & Replace (Bulk)" />;
+        return <FindReplaceTool />;
       case Tool.MERGE_FILES:
-        return <PlaceholderTool title="Merge Multiple Files" />;
+        return <MergeFilesTool />;
       case Tool.COMPARE_COLUMNS:
-        return <PlaceholderTool title="Compare Columns Within Same File" />;
+        return <CompareColumnsTool />;
       case Tool.QUICK_SUMMARY:
-        return <PlaceholderTool title="Quick Summary / Pivot-like Report" />;
+        return <QuickSummaryTool />;
       case Tool.DATA_VALIDATION:
         return <PlaceholderTool title="Data Validation Checks" />;
       case Tool.EXPORT_DUPLICATES:

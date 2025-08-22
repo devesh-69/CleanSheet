@@ -1,23 +1,25 @@
-
 import React, { useState, useMemo } from 'react';
 import { ComparisonOptions, ParsedFile } from '../types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/Card';
 import { Button } from './ui/Button';
 
 interface ColumnSelectorProps {
-  mainFile: ParsedFile;
+  mainFile?: ParsedFile;
   comparisonFile: ParsedFile;
   onCompare: (selectedColumns: string[], options: ComparisonOptions) => void;
   onBack: () => void;
 }
 
 export const ColumnSelector: React.FC<ColumnSelectorProps> = ({ mainFile, comparisonFile, onCompare, onBack }) => {
-  const commonColumns = useMemo(() => {
-    const mainHeaders = new Set(mainFile.headers);
-    return comparisonFile.headers.filter(header => mainHeaders.has(header));
+  const columns = useMemo(() => {
+    if (mainFile) {
+        const mainHeaders = new Set(mainFile.headers);
+        return comparisonFile.headers.filter(header => mainHeaders.has(header));
+    }
+    return comparisonFile.headers;
   }, [mainFile, comparisonFile]);
 
-  const [selectedColumns, setSelectedColumns] = useState<string[]>(commonColumns);
+  const [selectedColumns, setSelectedColumns] = useState<string[]>(columns);
   const [options, setOptions] = useState<ComparisonOptions>({
     caseSensitive: false,
     trimWhitespace: true,
@@ -31,7 +33,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({ mainFile, compar
   
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-        setSelectedColumns(commonColumns);
+        setSelectedColumns(columns);
     } else {
         setSelectedColumns([]);
     }
@@ -44,29 +46,32 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({ mainFile, compar
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
-        <CardTitle>Select Columns to Compare</CardTitle>
+        <CardTitle>{mainFile ? 'Select Columns to Compare' : 'Select Columns for Duplicate Check'}</CardTitle>
         <CardDescription>
-          Choose the columns that should be used to identify duplicate rows. Only columns present in both files are shown.
+          {mainFile 
+            ? 'Choose the columns that should be used to identify duplicate rows. Only columns present in both files are shown.'
+            : 'Choose the columns that should be used to identify duplicate rows within your file.'
+          }
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div>
-          <h4 className="text-lg font-semibold mb-3">Comparison Columns</h4>
+          <h4 className="text-lg font-semibold mb-3">{mainFile ? 'Comparison Columns' : 'Columns to Check'}</h4>
           <div className="border rounded-lg p-4 max-h-60 overflow-y-auto">
             <div className="flex items-center border-b pb-2 mb-2">
                 <input
                     type="checkbox"
                     id="select-all"
-                    checked={selectedColumns.length === commonColumns.length}
+                    checked={columns.length > 0 && selectedColumns.length === columns.length}
                     onChange={handleSelectAll}
                     className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                 />
                 <label htmlFor="select-all" className="ml-3 block text-sm font-medium text-gray-900">
-                    Select All ({commonColumns.length} columns)
+                    Select All ({columns.length} columns)
                 </label>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {commonColumns.map(col => (
+              {columns.map(col => (
                 <div key={col} className="flex items-center">
                   <input
                     type="checkbox"

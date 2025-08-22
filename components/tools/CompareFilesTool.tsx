@@ -14,7 +14,6 @@ const CompareFilesTool: React.FC = () => {
   const [results, setResults] = useState<DuplicateResult | null>(null);
   const [mainFileError, setMainFileError] = useState<string | null>(null);
   const [comparisonFileError, setComparisonFileError] = useState<string | null>(null);
-  const [compareOnly, setCompareOnly] = useState(false);
 
   // Reset state on component mount
   useEffect(() => {
@@ -57,7 +56,6 @@ const CompareFilesTool: React.FC = () => {
     setResults(null);
     setMainFileError(null);
     setComparisonFileError(null);
-    setCompareOnly(false);
   };
 
   const renderContent = () => {
@@ -79,17 +77,10 @@ const CompareFilesTool: React.FC = () => {
                 onFileUpload={handleComparisonFileUpload}
               />
             </div>
-            <div className="mt-8 flex flex-col items-end space-y-4">
+            <div className="mt-8 flex justify-end">
               <Button onClick={handleProceedToSelect} disabled={!mainFile || !comparisonFile || !!mainFileError || !!comparisonFileError}>
-                Compare & Remove Duplicates <ArrowRightIcon className="w-4 h-4 ml-2" />
+                Select Columns <ArrowRightIcon className="w-4 h-4 ml-2" />
               </Button>
-              <div className="flex items-center">
-                <label htmlFor="compare-only" className="text-sm text-gray-600 mr-3">Compare Only (don’t remove)</label>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" id="compare-only" className="sr-only peer" checked={compareOnly} onChange={(e) => setCompareOnly(e.target.checked)} />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
             </div>
           </>
         );
@@ -108,7 +99,26 @@ const CompareFilesTool: React.FC = () => {
         );
       case AppStep.RESULTS:
         if (results && comparisonFile) {
-          return <ResultsDisplay results={results} comparisonFile={comparisonFile} onRestart={handleRestart} compareOnly={compareOnly} />;
+          return (
+            <ResultsDisplay
+              title="Comparison Results"
+              description={
+                <>
+                  Found <span className="font-bold text-blue-600">{results.totalDuplicates}</span> duplicates in{' '}
+                  <span className="font-bold">{comparisonFile.name}</span> out of {results.totalRowsProcessed} total rows.
+                </>
+              }
+              headers={comparisonFile.headers}
+              tabs={[
+                { title: 'Duplicates Found', data: results.duplicates, badgeType: 'danger' },
+                { title: 'Cleaned Data', data: results.cleanedData, badgeType: 'success' },
+              ]}
+              downloadableData={results.cleanedData}
+              fileForExportName={comparisonFile.name}
+              onRestart={handleRestart}
+              restartButtonText="Start New Comparison"
+            />
+          );
         }
         return null;
       default:
@@ -119,9 +129,9 @@ const CompareFilesTool: React.FC = () => {
   return (
     <div className="w-full max-w-5xl mx-auto space-y-8">
       <header className="text-center">
-        <h1 className="text-4xl font-bold tracking-tight text-primary dark:text-white">Excel Duplicate Remover</h1>
+        <h1 className="text-4xl font-bold tracking-tight text-primary dark:text-white">Compare Two Files & Remove Duplicates</h1>
         <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
-          Compare two spreadsheet files, identify duplicates based on selected columns, and download the cleaned data—all in your browser.
+          Compare a 'comparison' file against a 'main' file to find and remove duplicate rows.
         </p>
       </header>
       {renderContent()}

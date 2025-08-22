@@ -37,3 +37,41 @@ export enum Tool {
   DATA_VALIDATION = 'DATA_VALIDATION',
   EXPORT_DUPLICATES = 'EXPORT_DUPLICATES',
 }
+
+export type SpecialCharsOptions = {
+    selectedColumns: string[];
+    removePunctuation: boolean;
+    removeMath: boolean;
+    removeCurrency: boolean;
+    removeEmoji: boolean;
+    // Filters are mutually exclusive
+    filterMode: 'none' | 'alphanumeric' | 'alphabetic' | 'numeric';
+    customChars: string;
+};
+
+export type FindReplaceOperation = {
+  id: number; // For React keys
+  find: string;
+  replace: string;
+};
+
+export type FindReplaceOptions = {
+    selectedColumns: string[];
+    operations: FindReplaceOperation[];
+    caseSensitive: boolean;
+    matchEntireCell: boolean;
+};
+
+export type ColumnComparisonResult = {
+    mismatches: Record<string, any>[];
+    totalMismatches: number;
+    totalRowsProcessed: number;
+};
+
+export type SummaryFunction = 'count' | 'sum' | 'average' | 'min' | 'max';
+
+export type SummaryOptions = {
+    groupingColumn: string;
+    aggregationColumn: string;
+    functions: SummaryFunction[];
+};
