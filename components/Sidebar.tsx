@@ -4,6 +4,7 @@ import {
   LayoutGridIcon, CopyIcon, SparklesIcon, ReplaceIcon,
   CombineIcon, ColumnsIcon, PieChartIcon, CheckSquareIcon, FileTextIcon
 } from './ui/Icons';
+import { Logo } from './ui/Logo';
 
 interface SidebarProps {
   activeTool: Tool;
@@ -43,8 +44,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTool, setActiveTool }) =
   return (
     <div className="hidden md:flex flex-col w-72 glass-sidebar flex-shrink-0">
       <div className="flex items-center justify-center h-20 border-b border-white/10">
-        <SparklesIcon className="w-8 h-8 mr-3 text-blue-400" />
-        <span className="text-white font-bold text-xl tracking-wider">Excel Pro Tools</span>
+        <Logo className="w-8 h-8 mr-3" />
+        <span className="text-white font-bold text-xl tracking-wider">duplisheets</span>
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         <div>
@@ -68,7 +69,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTool, setActiveTool }) =
         </div>
       </div>
        <div className="p-4 border-t border-white/10 text-center text-xs text-gray-400">
-        <p>&copy; {new Date().getFullYear()} Excel Pro Tools</p>
+        <p>&copy; {new Date().getFullYear()} duplisheets</p>
       </div>
     </div>
   );

@@ -1,8 +1,8 @@
-# Excel Pro Tools
+# duplisheets
 
 A modern, browser-based utility belt for cleaning, comparing, and processing spreadsheet files. No need to install any software—just drag, drop, and get your cleaned data instantly.
 
-![Excel Duplicate Remover Screenshot](https://storage.googleapis.com/proud-booth-3333/excel-duplicate-remover-screenshot.png)
+![duplisheets Screenshot](https://storage.googleapis.com/proud-booth-3333/excel-duplicate-remover-screenshot.png)
 
 ## ✨ Features
 
@@ -21,7 +21,7 @@ _Apply these actions in combination with other tools:_
 -   ... and more!
 
 ### Advanced Tools
--   **Compare Two Files & Remove Duplicates**: The flagship feature. Identify rows in one file that exist in another and generate a "clean" version.
+-   **Find Unique Rows**: Identify rows in one file that are unique compared to a base file.
 -   **Merge Multiple Files**: Combine several spreadsheet files into one.
 -   **Compare Columns Within Same File**: Find differences between two columns in the same sheet.
 -   **Quick Summary / Pivot-like Report**: Generate quick aggregate reports.
@@ -40,11 +40,11 @@ This project is designed to be simple to run locally without any complex build s
 ### Installation
 1.  Clone the repository to your local machine:
     ```bash
-    git clone https://github.com/your-username/excel-pro-tools.git
+    git clone https://github.com/your-username/duplisheets.git
     ```
 2.  Navigate into the project directory:
     ```bash
-    cd excel-pro-tools
+    cd duplisheets
     ```
 3.  Open the `index.html` file directly in your web browser. That's it!
 
@@ -59,8 +59,8 @@ Click the "Fork" button at the top-right corner of the original repository page.
 ### 2. Clone Your Fork
 Clone the repository from your account to your local machine. Replace `your-username` with your actual GitHub username.
 ```bash
-git clone https://github.com/your-username/excel-pro-tools.git
-cd excel-pro-tools
+git clone https://github.com/your-username/duplisheets.git
+cd duplisheets
 ```
 
 ### 3. Create a New Branch

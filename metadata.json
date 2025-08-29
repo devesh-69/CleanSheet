@@ -1,5 +1,5 @@
 {
-  "name": "Excel Duplicate Remover",
-  "description": "A modern, responsive web application that helps users identify and remove duplicates by comparing two spreadsheet files directly in the browser.",
+  "name": "duplisheets",
+  "description": "A modern, browser-based utility belt for cleaning, comparing, and processing spreadsheet files to find unique rows, remove duplicates, and more.",
   "requestFramePermissions": []
 }
