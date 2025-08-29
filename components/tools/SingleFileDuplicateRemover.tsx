@@ -59,10 +59,10 @@ const SingleFileDuplicateRemover: React.FC = () => {
                 return null;
             case AppStep.PROCESSING:
                 return (
-                    <div className="flex flex-col items-center justify-center text-center p-8 bg-white rounded-lg shadow-md">
-                        <SpinnerIcon className="w-12 h-12 text-blue-600 mb-4" />
-                        <h2 className="text-xl font-semibold text-gray-800">Finding Duplicates...</h2>
-                        <p className="text-gray-500 mt-2">Please wait while we process your file.</p>
+                    <div className="flex flex-col items-center justify-center text-center p-8 glass-card rounded-lg animate-slide-in">
+                        <SpinnerIcon className="w-12 h-12 text-blue-400 mb-4" />
+                        <h2 className="text-xl font-semibold text-white">Finding Duplicates...</h2>
+                        <p className="text-gray-400 mt-2">Please wait while we process your file.</p>
                     </div>
                 );
             case AppStep.RESULTS:
@@ -72,8 +72,8 @@ const SingleFileDuplicateRemover: React.FC = () => {
                             title="Processing Results"
                             description={
                                 <>
-                                Found <span className="font-bold text-blue-600">{results.totalDuplicates}</span> duplicates in{' '}
-                                <span className="font-bold">{file.name}</span>.
+                                Found <span className="font-bold text-blue-400">{results.totalDuplicates}</span> duplicates in{' '}
+                                <span className="font-bold text-gray-200">{file.name}</span>.
                                 </>
                             }
                             headers={file.headers}
@@ -94,10 +94,10 @@ const SingleFileDuplicateRemover: React.FC = () => {
     };
 
     return (
-        <div className="w-full max-w-4xl mx-auto space-y-8">
-             <header className="text-center">
-                <h1 className="text-4xl font-bold tracking-tight text-primary dark:text-white">Single File Duplicate Remover</h1>
-                <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
+        <div className="w-full max-w-5xl mx-auto space-y-8">
+             <header className="text-center animate-slide-in">
+                <h1 className="text-5xl font-extrabold tracking-tight gradient-text">Single File Duplicate Remover</h1>
+                <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
                     Upload a single spreadsheet to find and remove duplicate rows based on selected columns.
                 </p>
             </header>

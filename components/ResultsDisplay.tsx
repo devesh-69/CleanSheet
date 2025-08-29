@@ -24,9 +24,9 @@ interface ResultsDisplayProps {
 const Badge: React.FC<{ type: ResultTab['badgeType'], count: number }> = ({ type, count }) => {
     const baseClasses = "text-xs font-medium ml-2 px-2.5 py-0.5 rounded-full";
     const styles = {
-        danger: "bg-red-100 text-red-800",
-        success: "bg-green-100 text-green-800",
-        default: "bg-blue-100 text-blue-800",
+        danger: "bg-red-500/20 text-red-300",
+        success: "bg-green-500/20 text-green-300",
+        default: "bg-blue-500/20 text-blue-300",
     }
     return <span className={`${baseClasses} ${styles[type || 'default']}`}>{count}</span>
 }
@@ -53,7 +53,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   const showTabs = tabs.length > 1;
 
   return (
-    <Card className="w-full max-w-6xl mx-auto">
+    <Card className="w-full max-w-6xl mx-auto animate-slide-in">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
@@ -61,13 +61,13 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       <CardContent>
         <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
             {showTabs && (
-                <div className="border-b border-gray-200">
+                <div className="border-b border-white/10">
                     <nav className="-mb-px flex space-x-8" aria-label="Tabs">
                         {tabs.map((tab, index) => (
                              <button
                                 key={tab.title}
                                 onClick={() => { setActiveTabIndex(index); setCurrentPage(1); }}
-                                className={`${activeTabIndex === index ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                                className={`${activeTabIndex === index ? 'border-blue-500 text-blue-400' : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200`}
                             >
                                 {tab.title} <Badge type={tab.badgeType} count={tab.data.length} />
                             </button>
@@ -89,22 +89,22 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
             )}
         </div>
         
-        <div className="overflow-x-auto border rounded-lg">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="overflow-x-auto border border-white/10 rounded-lg">
+          <table className="min-w-full divide-y divide-white/10">
+            <thead className="glass-card rounded-t-lg">
               <tr>
                 {headers.map(header => (
-                  <th key={header} scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider truncate">
+                  <th key={header} scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider truncate">
                     {header}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-white/10">
               {paginatedData.map((row, rowIndex) => (
-                <tr key={rowIndex} className="hover:bg-gray-50">
+                <tr key={rowIndex} className="hover:bg-white/5 transition-colors duration-200">
                   {headers.map(header => (
-                    <td key={header} className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 truncate max-w-xs" title={String(row[header] ?? '')}>
+                    <td key={header} className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 truncate max-w-xs" title={String(row[header] ?? '')}>
                       {String(row[header] ?? '')}
                     </td>
                   ))}
@@ -121,16 +121,16 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
           </table>
         </div>
         {totalRows > 0 && (
-        <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 mt-4 rounded-b-lg">
+        <div className="flex items-center justify-between border-t border-white/10 px-4 py-3 sm:px-6 mt-4">
             <div className="flex-1 flex justify-between sm:hidden">
                 <Button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage === 1}>Previous</Button>
                 <Button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage === totalPages}>Next</Button>
             </div>
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
-                    <p className="text-sm text-gray-700">
-                        Showing <span className="font-medium">{(currentPage - 1) * rowsPerPage + 1}</span> to <span className="font-medium">{Math.min(currentPage * rowsPerPage, totalRows)}</span> of{' '}
-                        <span className="font-medium">{totalRows}</span> results
+                    <p className="text-sm text-gray-400">
+                        Showing <span className="font-medium text-gray-200">{(currentPage - 1) * rowsPerPage + 1}</span> to <span className="font-medium text-gray-200">{Math.min(currentPage * rowsPerPage, totalRows)}</span> of{' '}
+                        <span className="font-medium text-gray-200">{totalRows}</span> results
                     </p>
                 </div>
                 <div>

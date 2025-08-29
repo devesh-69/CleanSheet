@@ -7,6 +7,13 @@ import { SpinnerIcon, XCircleIcon } from '../ui/Icons';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/Card';
 import { Button } from '../ui/Button';
 
+const ModernToggle: React.FC<{ id: string; checked: boolean; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; }> = ({ id, checked, onChange }) => (
+    <label htmlFor={id} className="relative inline-flex items-center cursor-pointer">
+        <input type="checkbox" id={id} className="sr-only peer" checked={checked} onChange={onChange} />
+        <div className="w-11 h-6 bg-gray-200/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r from-blue-500 to-purple-600"></div>
+    </label>
+);
+
 const OptionsSelector: React.FC<{
     file: ParsedFile,
     onProcess: (options: FindReplaceOptions) => void,
@@ -51,24 +58,24 @@ const OptionsSelector: React.FC<{
     const isProcessDisabled = options.selectedColumns.length === 0 || options.operations.every(op => !op.find);
 
     return (
-        <Card className="w-full max-w-4xl mx-auto">
+        <Card className="w-full max-w-4xl mx-auto animate-slide-in">
             <CardHeader>
                 <CardTitle>Configure Find & Replace</CardTitle>
                 <CardDescription>Select columns and define one or more find/replace operations.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 <div>
-                    <h4 className="text-lg font-semibold mb-3">Columns to Process</h4>
-                    <div className="border rounded-lg p-4 max-h-60 overflow-y-auto">
-                        <div className="flex items-center border-b pb-2 mb-2">
-                            <input type="checkbox" id="select-all-cols" checked={options.selectedColumns.length === file.headers.length} onChange={handleSelectAll} className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"/>
-                            <label htmlFor="select-all-cols" className="ml-3 block text-sm font-medium text-gray-900">Select All ({file.headers.length} columns)</label>
+                    <h4 className="text-lg font-semibold mb-3 text-gray-200">Columns to Process</h4>
+                    <div className="border border-white/10 rounded-lg p-4 max-h-60 overflow-y-auto">
+                        <div className="flex items-center border-b border-white/10 pb-2 mb-2">
+                            <input type="checkbox" id="select-all-cols" checked={options.selectedColumns.length === file.headers.length} onChange={handleSelectAll} className="h-4 w-4 rounded border-gray-500 text-blue-500 bg-transparent focus:ring-blue-500"/>
+                            <label htmlFor="select-all-cols" className="ml-3 block text-sm font-medium text-gray-300">Select All ({file.headers.length} columns)</label>
                         </div>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 pt-2">
                             {file.headers.map(col => (
                                 <div key={col} className="flex items-center">
-                                    <input type="checkbox" id={`col-${col}`} checked={options.selectedColumns.includes(col)} onChange={() => handleColumnToggle(col)} className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"/>
-                                    <label htmlFor={`col-${col}`} className="ml-3 block text-sm text-gray-700 truncate" title={col}>{col}</label>
+                                    <input type="checkbox" id={`col-${col}`} checked={options.selectedColumns.includes(col)} onChange={() => handleColumnToggle(col)} className="h-4 w-4 rounded border-gray-500 text-blue-500 bg-transparent focus:ring-blue-500"/>
+                                    <label htmlFor={`col-${col}`} className="ml-3 block text-sm text-gray-300 truncate" title={col}>{col}</label>
                                 </div>
                             ))}
                         </div>
@@ -76,7 +83,7 @@ const OptionsSelector: React.FC<{
                 </div>
 
                 <div>
-                    <h4 className="text-lg font-semibold mb-3">Operations</h4>
+                    <h4 className="text-lg font-semibold mb-3 text-gray-200">Operations</h4>
                     <div className="space-y-3">
                         {options.operations.map((op, index) => (
                             <div key={op.id} className="grid grid-cols-12 gap-2 items-center">
@@ -85,18 +92,18 @@ const OptionsSelector: React.FC<{
                                     placeholder="Find what"
                                     value={op.find}
                                     onChange={(e) => updateOperation(op.id, 'find', e.target.value)}
-                                    className="col-span-5 p-2 border rounded-md"
+                                    className="col-span-5 p-2 border rounded-md bg-transparent border-white/20 text-white focus:ring-blue-500 focus:border-blue-500"
                                 />
                                 <input
                                     type="text"
                                     placeholder="Replace with"
                                     value={op.replace}
                                     onChange={(e) => updateOperation(op.id, 'replace', e.target.value)}
-                                    className="col-span-6 p-2 border rounded-md"
+                                    className="col-span-6 p-2 border rounded-md bg-transparent border-white/20 text-white focus:ring-blue-500 focus:border-blue-500"
                                 />
-                                <div className="col-span-1">
+                                <div className="col-span-1 flex justify-center">
                                     {options.operations.length > 1 && (
-                                        <button onClick={() => removeOperation(op.id)} className="text-gray-400 hover:text-red-600">
+                                        <button onClick={() => removeOperation(op.id)} className="text-gray-400 hover:text-red-400">
                                             <XCircleIcon className="w-5 h-5" />
                                         </button>
                                     )}
@@ -108,21 +115,15 @@ const OptionsSelector: React.FC<{
                 </div>
                 
                  <div>
-                    <h4 className="text-lg font-semibold mb-3">Matching Options</h4>
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <label htmlFor="case-sensitive" className="text-sm text-gray-700">Case-sensitive matching</label>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="case-sensitive" className="sr-only peer" checked={options.caseSensitive} onChange={(e) => setOptions(o => ({...o, caseSensitive: e.target.checked}))} />
-                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
+                    <h4 className="text-lg font-semibold mb-3 text-gray-200">Matching Options</h4>
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                            <label htmlFor="case-sensitive" className="text-sm text-gray-300">Case-sensitive matching</label>
+                            <ModernToggle id="case-sensitive" checked={options.caseSensitive} onChange={(e) => setOptions(o => ({...o, caseSensitive: e.target.checked}))} />
                         </div>
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <label htmlFor="match-entire-cell" className="text-sm text-gray-700">Match entire cell value</label>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="match-entire-cell" className="sr-only peer" checked={options.matchEntireCell} onChange={(e) => setOptions(o => ({...o, matchEntireCell: e.target.checked}))} />
-                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
+                        <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                            <label htmlFor="match-entire-cell" className="text-sm text-gray-300">Match entire cell value</label>
+                            <ModernToggle id="match-entire-cell" checked={options.matchEntireCell} onChange={(e) => setOptions(o => ({...o, matchEntireCell: e.target.checked}))} />
                         </div>
                     </div>
                 </div>
@@ -183,17 +184,17 @@ const FindReplaceTool: React.FC = () => {
                 return null;
             case AppStep.PROCESSING:
                 return (
-                    <div className="flex flex-col items-center justify-center text-center p-8 bg-white rounded-lg shadow-md">
-                        <SpinnerIcon className="w-12 h-12 text-blue-600 mb-4" />
-                        <h2 className="text-xl font-semibold text-gray-800">Applying Changes...</h2>
-                        <p className="text-gray-500 mt-2">Please wait while we process your file.</p>
+                    <div className="flex flex-col items-center justify-center text-center p-8 glass-card rounded-lg animate-slide-in">
+                        <SpinnerIcon className="w-12 h-12 text-blue-400 mb-4" />
+                        <h2 className="text-xl font-semibold text-white">Applying Changes...</h2>
+                        <p className="text-gray-400 mt-2">Please wait while we process your file.</p>
                     </div>
                 );
             case AppStep.RESULTS:
                 if (processedData && file) {
                     return <ResultsDisplay 
                         title="Your Modified File is Ready"
-                        description={<>We've processed <span className="font-bold">{file.name}</span> and applied your find/replace rules. Preview the changes below.</>}
+                        description={<>We've processed <span className="font-bold text-gray-200">{file.name}</span> and applied your find/replace rules. Preview the changes below.</>}
                         headers={file.headers}
                         tabs={[{ title: 'Processed Data', data: processedData, badgeType: 'success' }]}
                         downloadableData={processedData}
@@ -209,9 +210,9 @@ const FindReplaceTool: React.FC = () => {
 
     return (
         <div className="w-full max-w-5xl mx-auto space-y-8">
-            <header className="text-center">
-                <h1 className="text-4xl font-bold tracking-tight text-primary dark:text-white">Find & Replace (Bulk)</h1>
-                <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
+            <header className="text-center animate-slide-in">
+                <h1 className="text-5xl font-extrabold tracking-tight gradient-text">Find & Replace (Bulk)</h1>
+                <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
                     Efficiently perform multiple find and replace operations across selected columns in your spreadsheet.
                 </p>
             </header>

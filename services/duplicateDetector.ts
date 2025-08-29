@@ -7,6 +7,9 @@ const generateCompositeKey = (row: Record<string, any>, columns: string[], optio
       if (options.trimWhitespace) {
         value = value.trim();
       }
+      if (options.ignoreSpecialChars) {
+        value = value.replace(/[^a-zA-Z0-9]/g, '');
+      }
       if (!options.caseSensitive) {
         value = value.toLowerCase();
       }
@@ -47,7 +50,8 @@ export const findDuplicates = (
     }
   }
 
-  // Second, process the clean data candidates to remove any intra-file duplicates from this set.
+  // Second, process the clean data candidates to remove any intra-file duplicates from this set,
+  // moving them to the main duplicates list.
   const cleanedData: Record<string, any>[] = [];
   const cleanedDataKeys = new Set<string>();
   for (const row of cleanDataCandidates) {
@@ -55,6 +59,8 @@ export const findDuplicates = (
     if (!cleanedDataKeys.has(key)) {
       cleanedData.push(row);
       cleanedDataKeys.add(key);
+    } else {
+      duplicates.push(row);
     }
   }
 

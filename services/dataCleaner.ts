@@ -170,6 +170,11 @@ export const compareColumns = (
             valueA = valueA.trim();
             valueB = valueB.trim();
         }
+        
+        if (options.ignoreSpecialChars) {
+            valueA = valueA.replace(/[^a-zA-Z0-9]/g, '');
+            valueB = valueB.replace(/[^a-zA-Z0-9]/g, '');
+        }
 
         if (!options.caseSensitive) {
             valueA = valueA.toLowerCase();

@@ -14,6 +14,8 @@ interface FileStatus {
 
 interface MultiFileUploaderProps {
   onFilesChange: (files: ParsedFile[]) => void;
+  title?: string;
+  description?: string;
 }
 
 const formatBytes = (bytes: number, decimals = 2) => {
@@ -25,7 +27,11 @@ const formatBytes = (bytes: number, decimals = 2) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 };
 
-export const MultiFileUploader: React.FC<MultiFileUploaderProps> = ({ onFilesChange }) => {
+export const MultiFileUploader: React.FC<MultiFileUploaderProps> = ({ 
+    onFilesChange, 
+    title = "Upload Files", 
+    description = "Select or drop the spreadsheet files you want to process."
+}) => {
   const [isDragging, setIsDragging] = useState(false);
   const [fileStatuses, setFileStatuses] = useState<FileStatus[]>([]);
 
@@ -44,8 +50,8 @@ export const MultiFileUploader: React.FC<MultiFileUploaderProps> = ({ onFilesCha
         error: null
     }));
 
-    const allStatuses = [...fileStatuses, ...newFileStatuses];
-    setFileStatuses(allStatuses);
+    // Use a function for setFileStatuses to avoid stale state issues with the async loop
+    setFileStatuses(prev => [...prev, ...newFileStatuses]);
 
     for (const fs of newFileStatuses) {
         try {
@@ -56,7 +62,7 @@ export const MultiFileUploader: React.FC<MultiFileUploaderProps> = ({ onFilesCha
         }
     }
     
-  }, [fileStatuses]);
+  }, []);
 
   React.useEffect(() => {
     const successfulUploads = fileStatuses
@@ -78,40 +84,41 @@ export const MultiFileUploader: React.FC<MultiFileUploaderProps> = ({ onFilesCha
   };
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => { handleFiles(e.target.files); };
   
-  const borderColor = isDragging ? 'border-blue-500' : 'border-dashed border-gray-300';
+  const borderAnimation = isDragging ? 'animate-border-breathing' : '';
+  const bgColor = isDragging ? 'bg-blue-500/10' : 'bg-transparent';
 
   return (
-    <Card className="w-full">
+    <Card className="w-full animate-slide-in">
       <CardHeader>
-        <CardTitle>Upload Files</CardTitle>
-        <CardDescription>Select or drop the spreadsheet files you want to merge.</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
         <div
-          className={`border-2 ${borderColor} rounded-lg p-8 text-center transition-colors duration-200`}
+          className={`border-2 border-dashed ${borderAnimation} ${bgColor} rounded-lg p-8 text-center transition-all duration-300`}
           onDragEnter={handleDragEnter} onDragLeave={handleDragLeave} onDragOver={handleDragOver} onDrop={handleDrop}
         >
           <input id="multi-file-upload" type="file" className="hidden" accept=".xlsx, .xls, .csv" onChange={handleChange} multiple />
           <label htmlFor="multi-file-upload" className="cursor-pointer flex flex-col items-center justify-center space-y-2">
             <UploadCloudIcon className="w-12 h-12 text-gray-400" />
-            <p className="text-sm text-gray-600"><span className="font-semibold text-blue-600">Click to upload</span> or drag and drop</p>
+            <p className="text-sm text-gray-300"><span className="font-semibold text-blue-400">Click to upload</span> or drag and drop</p>
             <p className="text-xs text-gray-500">XLSX, XLS, or CSV</p>
           </label>
         </div>
         {fileStatuses.length > 0 && (
-          <div className="mt-4 space-y-3">
+          <div className="mt-4 space-y-3 max-h-60 overflow-y-auto">
             {fileStatuses.map(fs => (
-              <div key={fs.id} className="flex items-center p-3 bg-gray-50 rounded-lg">
-                <FileIcon className="w-6 h-6 text-gray-500" />
-                <div className="ml-3 flex-1">
-                  <p className="text-sm font-medium text-gray-800 truncate">{fs.file.name}</p>
-                  <div className="text-xs text-gray-500">
+              <div key={fs.id} className="flex items-center p-3 bg-white/5 rounded-lg animate-slide-in">
+                <FileIcon className="w-6 h-6 text-gray-400 flex-shrink-0" />
+                <div className="ml-3 flex-1 min-w-0">
+                  <p className="text-sm font-medium text-white truncate">{fs.file.name}</p>
+                  <div className="text-xs text-gray-400">
                     {fs.status === 'loading' && <span className="flex items-center"><SpinnerIcon className="w-4 h-4 mr-1" />Processing...</span>}
-                    {fs.status === 'error' && <span className="text-red-600">{fs.error}</span>}
-                    {fs.status === 'success' && fs.data && <span className="text-green-600">{fs.data.rowCount} rows, {formatBytes(fs.data.size)}</span>}
+                    {fs.status === 'error' && <span className="text-red-400">{fs.error}</span>}
+                    {fs.status === 'success' && fs.data && <span className="text-green-400">{fs.data.rowCount} rows, {formatBytes(fs.data.size)}</span>}
                   </div>
                 </div>
-                <button onClick={() => removeFile(fs.id)} className="ml-4 text-gray-400 hover:text-red-500">
+                <button onClick={() => removeFile(fs.id)} className="ml-4 text-gray-400 hover:text-red-400">
                   <XCircleIcon className="w-5 h-5" />
                 </button>
               </div>

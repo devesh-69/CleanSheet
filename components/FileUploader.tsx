@@ -22,18 +22,19 @@ const formatBytes = (bytes: number, decimals = 2) => {
 };
 
 const FileInfo: React.FC<{ fileData: ParsedFile }> = ({ fileData }) => (
-    <div className="mt-4 text-sm text-gray-600 space-y-2">
-        <div className="flex items-center gap-2">
-            <FileIcon className="w-5 h-5 text-gray-500" />
+    <div className="mt-4 text-sm text-gray-300 space-y-2 animate-slide-in">
+        <div className="flex items-center gap-2 p-3 bg-white/5 rounded-lg">
+            <FileIcon className="w-5 h-5 text-gray-400" />
             <span className="font-semibold truncate">{fileData.name}</span>
+             <span className="ml-auto text-xs text-gray-400">{formatBytes(fileData.size)}</span>
         </div>
-        <div className="flex items-center gap-2">
-            <TableIcon className="w-5 h-5 text-gray-500" />
+        <div className="flex items-center gap-2 p-3 bg-white/5 rounded-lg">
+            <TableIcon className="w-5 h-5 text-gray-400" />
             <span>{fileData.rowCount} rows, {fileData.columnCount} columns</span>
         </div>
-        <div className="flex items-center gap-2">
-            <CheckCircleIcon className="w-5 h-5 text-green-500" />
-            <span className="text-green-600">Successfully processed ({formatBytes(fileData.size)})</span>
+        <div className="flex items-center gap-2 p-3 bg-green-500/10 text-green-400 rounded-lg">
+            <CheckCircleIcon className="w-5 h-5" />
+            <span>Successfully processed</span>
         </div>
     </div>
 );
@@ -97,18 +98,18 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ id, title, descripti
     }
   };
   
-  const borderColor = isDragging ? 'border-blue-500' : 'border-dashed border-gray-300';
-  const bgColor = isDragging ? 'bg-blue-50' : 'bg-white';
+  const borderAnimation = isDragging ? 'animate-border-breathing' : '';
+  const bgColor = isDragging ? 'bg-blue-500/10' : 'bg-transparent';
 
   return (
-    <Card className="w-full">
+    <Card className="w-full animate-slide-in">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
         <div
-          className={`border-2 ${borderColor} ${bgColor} rounded-lg p-8 text-center transition-colors duration-200`}
+          className={`border-2 border-dashed ${borderAnimation} ${bgColor} rounded-lg p-8 text-center transition-all duration-300`}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
           onDragOver={handleDragOver}
@@ -125,21 +126,21 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ id, title, descripti
           <label htmlFor={id} className="cursor-pointer">
             <div className="flex flex-col items-center justify-center space-y-2">
               <UploadCloudIcon className="w-12 h-12 text-gray-400" />
-              <p className="text-sm text-gray-600">
-                <span className="font-semibold text-blue-600">Click to upload</span> or drag and drop
+              <p className="text-sm text-gray-300">
+                <span className="font-semibold text-blue-400">Click to upload</span> or drag and drop
               </p>
-              <p className="text-xs text-gray-500">XLSX, XLS, or CSV (max 50MB)</p>
+              <p className="text-xs text-gray-500">XLSX, XLS, or CSV</p>
             </div>
           </label>
         </div>
         {isLoading && (
-            <div className="mt-4 flex items-center justify-center text-sm text-gray-500">
+            <div className="mt-4 flex items-center justify-center text-sm text-gray-400">
                 <SpinnerIcon className="w-5 h-5 mr-2" />
                 <span>Processing file...</span>
             </div>
         )}
         {error && (
-          <div className="mt-4 text-sm text-red-600 flex items-center gap-2">
+          <div className="mt-4 text-sm text-red-400 flex items-center gap-2 p-3 bg-red-500/10 rounded-lg animate-slide-in">
             <XCircleIcon className="w-5 h-5" />
             <span>{error}</span>
           </div>

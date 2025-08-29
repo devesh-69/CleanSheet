@@ -8,7 +8,7 @@ interface CardProps {
 
 export const Card: React.FC<CardProps> = ({ children, className }) => {
   return (
-    <div className={`bg-white border border-border rounded-lg shadow-sm ${className}`}>
+    <div className={`glass-card rounded-lg shadow-2xl ${className}`}>
       {children}
     </div>
   );
@@ -20,7 +20,7 @@ interface CardHeaderProps {
 }
 
 export const CardHeader: React.FC<CardHeaderProps> = ({ children, className }) => {
-    return <div className={`p-6 border-b border-border ${className}`}>{children}</div>
+    return <div className={`p-6 border-b border-white/10 ${className}`}>{children}</div>
 };
 
 interface CardContentProps {
@@ -38,7 +38,7 @@ interface CardFooterProps {
 }
 
 export const CardFooter: React.FC<CardFooterProps> = ({ children, className }) => {
-    return <div className={`p-6 border-t border-border ${className}`}>{children}</div>
+    return <div className={`p-6 border-t border-white/10 ${className}`}>{children}</div>
 };
 
 interface CardTitleProps {
@@ -47,7 +47,7 @@ interface CardTitleProps {
 }
 
 export const CardTitle: React.FC<CardTitleProps> = ({ children, className }) => {
-    return <h3 className={`text-2xl font-semibold leading-none tracking-tight ${className}`}>{children}</h3>
+    return <h3 className={`text-2xl font-bold leading-none tracking-tight text-white ${className}`}>{children}</h3>
 };
 
 interface CardDescriptionProps {
@@ -56,5 +56,5 @@ interface CardDescriptionProps {
 }
 
 export const CardDescription: React.FC<CardDescriptionProps> = ({ children, className }) => {
-    return <p className={`text-sm text-muted-foreground ${className}`}>{children}</p>
+    return <p className={`text-sm text-gray-400 ${className}`}>{children}</p>
 };

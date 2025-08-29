@@ -52,7 +52,7 @@ const OptionsSelector: React.FC<{
     const allFunctions: SummaryFunction[] = ['count', 'sum', 'average', 'min', 'max'];
     
     return (
-        <Card className="w-full max-w-3xl mx-auto">
+        <Card className="w-full max-w-3xl mx-auto animate-slide-in">
             <CardHeader>
                 <CardTitle>Configure Summary Report</CardTitle>
                 <CardDescription>Select columns for grouping and calculation to generate your report.</CardDescription>
@@ -60,24 +60,24 @@ const OptionsSelector: React.FC<{
             <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                      <div>
-                        <label htmlFor="grouping-col" className="block text-sm font-medium text-gray-700 mb-1">Group By (Rows)</label>
+                        <label htmlFor="grouping-col" className="block text-sm font-medium text-gray-300 mb-1">Group By (Rows)</label>
                         <select
                             id="grouping-col"
                             value={options.groupingColumn}
                             onChange={(e) => setOptions(o => ({...o, groupingColumn: e.target.value}))}
-                            className="w-full p-2 border rounded-md bg-white shadow-sm"
+                            className="w-full p-2 border rounded-md bg-transparent border-white/20 text-white"
                         >
                             {file.headers.map(h => <option key={h} value={h}>{h}</option>)}
                         </select>
-                         <p className="text-xs text-gray-500 mt-1">Select the column to create groups from.</p>
+                         <p className="text-xs text-gray-400 mt-1">Select the column to create groups from.</p>
                     </div>
                      <div>
-                        <label htmlFor="agg-col" className="block text-sm font-medium text-gray-700 mb-1">Calculate On (Values)</label>
+                        <label htmlFor="agg-col" className="block text-sm font-medium text-gray-300 mb-1">Calculate On (Values)</label>
                         <select
                             id="agg-col"
                             value={options.aggregationColumn}
                             onChange={(e) => setOptions(o => ({...o, aggregationColumn: e.target.value}))}
-                            className="w-full p-2 border rounded-md bg-white shadow-sm"
+                            className="w-full p-2 border rounded-md bg-transparent border-white/20 text-white"
                         >
                              {numericColumns.length > 0 ? (
                                 numericColumns.map(h => <option key={h} value={h}>{h}</option>)
@@ -85,23 +85,23 @@ const OptionsSelector: React.FC<{
                                 <option disabled>No numeric columns found</option>
                             )}
                         </select>
-                         <p className="text-xs text-gray-500 mt-1">Select the numeric column for calculations.</p>
+                         <p className="text-xs text-gray-400 mt-1">Select the numeric column for calculations.</p>
                     </div>
                 </div>
 
                  <div>
-                    <h4 className="text-lg font-semibold mb-3">Calculations</h4>
+                    <h4 className="text-lg font-semibold mb-3 text-gray-200">Calculations</h4>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                          {allFunctions.map(func => (
-                            <div key={func} className="flex items-center p-3 bg-gray-50 rounded-lg">
+                            <div key={func} className="flex items-center p-3 bg-white/5 rounded-lg">
                                 <input
                                     type="checkbox"
                                     id={`func-${func}`}
                                     checked={options.functions.includes(func)}
                                     onChange={() => handleFunctionToggle(func)}
-                                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                    className="h-4 w-4 rounded border-gray-500 text-blue-500 bg-transparent focus:ring-blue-500"
                                 />
-                                <label htmlFor={`func-${func}`} className="ml-3 block text-sm text-gray-700 capitalize">{func}</label>
+                                <label htmlFor={`func-${func}`} className="ml-3 block text-sm text-gray-300 capitalize">{func}</label>
                             </div>
                         ))}
                     </div>
@@ -167,17 +167,17 @@ const QuickSummaryTool: React.FC = () => {
                 return null;
             case AppStep.PROCESSING:
                 return (
-                    <div className="flex flex-col items-center justify-center text-center p-8 bg-white rounded-lg shadow-md">
-                        <SpinnerIcon className="w-12 h-12 text-blue-600 mb-4" />
-                        <h2 className="text-xl font-semibold text-gray-800">Generating Summary...</h2>
-                        <p className="text-gray-500 mt-2">Please wait while we analyze your data.</p>
+                    <div className="flex flex-col items-center justify-center text-center p-8 glass-card rounded-lg animate-slide-in">
+                        <SpinnerIcon className="w-12 h-12 text-blue-400 mb-4" />
+                        <h2 className="text-xl font-semibold text-white">Generating Summary...</h2>
+                        <p className="text-gray-400 mt-2">Please wait while we analyze your data.</p>
                     </div>
                 );
             case AppStep.RESULTS:
                 if (result && file) {
                     return <ResultsDisplay 
                         title="Summary Report"
-                        description={<>Generated a summary from <span className="font-bold">{file.name}</span>. Preview the report below.</>}
+                        description={<>Generated a summary from <span className="font-bold text-gray-200">{file.name}</span>. Preview the report below.</>}
                         headers={result.summaryHeaders}
                         tabs={[{ title: 'Summary Data', data: result.summaryData, badgeType: 'default' }]}
                         downloadableData={result.summaryData}
@@ -193,9 +193,9 @@ const QuickSummaryTool: React.FC = () => {
 
     return (
         <div className="w-full max-w-5xl mx-auto space-y-8">
-            <header className="text-center">
-                <h1 className="text-4xl font-bold tracking-tight text-primary dark:text-white">Quick Summary Report</h1>
-                <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
+            <header className="text-center animate-slide-in">
+                <h1 className="text-5xl font-extrabold tracking-tight gradient-text">Quick Summary Report</h1>
+                <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
                     Generate a pivot-like summary from your data by grouping and calculating values from selected columns.
                 </p>
             </header>

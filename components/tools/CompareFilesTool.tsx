@@ -62,7 +62,7 @@ const CompareFilesTool: React.FC = () => {
     switch (step) {
       case AppStep.UPLOAD:
         return (
-          <>
+          <div className="animate-slide-in">
             <div className="grid md:grid-cols-2 gap-8">
               <FileUploader
                 id="main-file"
@@ -82,7 +82,7 @@ const CompareFilesTool: React.FC = () => {
                 Select Columns <ArrowRightIcon className="w-4 h-4 ml-2" />
               </Button>
             </div>
-          </>
+          </div>
         );
       case AppStep.SELECT_COLUMNS:
         if (mainFile && comparisonFile) {
@@ -91,10 +91,10 @@ const CompareFilesTool: React.FC = () => {
         return null;
       case AppStep.PROCESSING:
         return (
-          <div className="flex flex-col items-center justify-center text-center p-8 bg-white rounded-lg shadow-md">
-            <SpinnerIcon className="w-12 h-12 text-blue-600 mb-4" />
-            <h2 className="text-xl font-semibold text-gray-800">Finding Duplicates...</h2>
-            <p className="text-gray-500 mt-2">Please wait while we process your files.</p>
+          <div className="flex flex-col items-center justify-center text-center p-8 glass-card rounded-lg shadow-md animate-slide-in">
+            <SpinnerIcon className="w-12 h-12 text-blue-400 mb-4" />
+            <h2 className="text-xl font-semibold text-white">Finding Duplicates...</h2>
+            <p className="text-gray-400 mt-2">Please wait while we process your files.</p>
           </div>
         );
       case AppStep.RESULTS:
@@ -104,8 +104,8 @@ const CompareFilesTool: React.FC = () => {
               title="Comparison Results"
               description={
                 <>
-                  Found <span className="font-bold text-blue-600">{results.totalDuplicates}</span> duplicates in{' '}
-                  <span className="font-bold">{comparisonFile.name}</span> out of {results.totalRowsProcessed} total rows.
+                  Found <span className="font-bold text-blue-400">{results.totalDuplicates}</span> duplicates in{' '}
+                  <span className="font-bold text-gray-200">{comparisonFile.name}</span> out of {results.totalRowsProcessed} total rows.
                 </>
               }
               headers={comparisonFile.headers}
@@ -128,9 +128,9 @@ const CompareFilesTool: React.FC = () => {
 
   return (
     <div className="w-full max-w-5xl mx-auto space-y-8">
-      <header className="text-center">
-        <h1 className="text-4xl font-bold tracking-tight text-primary dark:text-white">Compare Two Files & Remove Duplicates</h1>
-        <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto">
+      <header className="text-center animate-slide-in">
+        <h1 className="text-5xl font-extrabold tracking-tight gradient-text">Compare Two Files & Remove Duplicates</h1>
+        <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
           Compare a 'comparison' file against a 'main' file to find and remove duplicate rows.
         </p>
       </header>

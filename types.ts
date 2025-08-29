@@ -10,6 +10,7 @@ export type ParsedFile = {
 export type ComparisonOptions = {
   caseSensitive: boolean;
   trimWhitespace: boolean;
+  ignoreSpecialChars: boolean;
 };
 
 export type DuplicateResult = {

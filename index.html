@@ -4,49 +4,149 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Excel Duplicate Remover</title>
+    <title>Excel Pro Tools</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS (xlsx) for Excel file parsing -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- PapaParse for CSV file parsing -->
-    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/paparse@5.4.1/paparse.min.js"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #0a092d;
+        background-image: radial-gradient(at 27% 37%, hsla(215, 98%, 61%, 0.1) 0px, transparent 50%),
+                          radial-gradient(at 97% 21%, hsla(125, 98%, 72%, 0.1) 0px, transparent 50%),
+                          radial-gradient(at 52% 99%, hsla(355, 98%, 76%, 0.1) 0px, transparent 50%),
+                          radial-gradient(at 10% 29%, hsla(256, 96%, 68%, 0.1) 0px, transparent 50%),
+                          radial-gradient(at 97% 96%, hsla(38, 60%, 74%, 0.1) 0px, transparent 50%),
+                          radial-gradient(at 33% 50%, hsla(222, 67%, 73%, 0.1) 0px, transparent 50%),
+                          radial-gradient(at 79% 53%, hsla(343, 68%, 79%, 0.1) 0px, transparent 50%);
+        overflow: hidden;
+      }
+
+      /* Cursor Spotlight Effect */
+      #cursor-spotlight {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(29, 78, 216, 0.15), transparent 60%);
+        border-radius: 50%;
+        pointer-events: none;
+        transform: translate(-50%, -50%);
+        transition: transform 0.1s ease-out, width 0.3s ease, height 0.3s ease;
+        z-index: 9999;
+      }
+
+      /* Glassmorphism Classes */
+      .glass-card {
+        background: rgba(17, 24, 39, 0.4); /* Semi-transparent dark background */
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      }
+      .glass-sidebar {
+        background: rgba(10, 9, 45, 0.6);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      
+      /* Modern Form Elements */
+      .modern-toggle .peer:checked ~ .toggle-bg {
+        background-color: #2563eb; /* Blue-600 */
+        border-color: #2563eb;
+      }
+      
+      .modern-toggle .peer:checked ~ .toggle-dot {
+        transform: translateX(100%);
+        background-color: white;
+      }
+
+      /* Gradient Text */
+      .gradient-text {
+        background: linear-gradient(to right, #60a5fa, #a78bfa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-fill-color: transparent;
+      }
+      
+      /* Scrollbar Styling */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+    </style>
     <script>
       tailwind.config = {
         darkMode: 'class',
         theme: {
           extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
             colors: {
-              border: "hsl(214.3 31.8% 91.4%)",
-              input: "hsl(214.3 31.8% 91.4%)",
+              border: "hsl(217 33% 17%)",
+              input: "hsl(217 33% 17%)",
               ring: "hsl(222.2 84% 4.9%)",
-              background: "hsl(0 0% 100%)",
-              foreground: "hsl(222.2 84% 4.9%)",
+              background: "#0a092d", // Deep blue
+              foreground: "hsl(210 40% 98%)",
               primary: {
-                DEFAULT: "hsl(222.2 47.4% 11.2%)",
+                DEFAULT: "#2563eb", // Blue-600
                 foreground: "hsl(210 40% 98%)",
               },
               secondary: {
-                DEFAULT: "hsl(210 40% 96.1%)",
-                foreground: "hsl(222.2 47.4% 11.2%)",
+                DEFAULT: "rgba(255, 255, 255, 0.1)",
+                foreground: "hsl(210 40% 98%)",
               },
               destructive: {
-                DEFAULT: "hsl(0 84.2% 60.2%)",
+                DEFAULT: "#dc2626", // Red-600
                 foreground: "hsl(210 40% 98%)",
               },
               muted: {
-                DEFAULT: "hsl(210 40% 96.1%)",
-                foreground: "hsl(215.4 16.3% 46.9%)",
+                DEFAULT: "hsl(217 33% 17%)",
+                foreground: "hsl(215 20% 65%)",
               },
               accent: {
-                DEFAULT: "hsl(210 40% 96.1%)",
-                foreground: "hsl(222.2 47.4% 11.2%)",
+                DEFAULT: "hsl(217 33% 17%)",
+                foreground: "hsl(210 40% 98%)",
               },
             },
             borderRadius: {
-              lg: "0.5rem",
-              md: "calc(0.5rem - 2px)",
-              sm: "calc(0.5rem - 4px)",
+              lg: "0.75rem",
+              md: "0.5rem",
+              sm: "0.375rem",
             },
+            keyframes: {
+              "border-breathing": {
+                '0%, 100%': { 'border-color': 'rgba(96, 165, 250, 0.4)' },
+                '50%': { 'border-color': 'rgba(167, 139, 250, 0.8)' },
+              },
+              "slide-in": {
+                '0%': { opacity: '0', transform: 'translateY(20px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              }
+            },
+            animation: {
+              'border-breathing': 'border-breathing 4s ease-in-out infinite',
+              'slide-in': 'slide-in 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
+            }
           },
         },
       }
@@ -64,5 +164,14 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
+    <script>
+      const spotlight = document.createElement('div');
+      spotlight.id = 'cursor-spotlight';
+      document.body.appendChild(spotlight);
+
+      document.addEventListener('mousemove', (e) => {
+        spotlight.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+      });
+    </script>
   </body>
 </html>

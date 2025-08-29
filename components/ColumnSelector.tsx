@@ -3,12 +3,20 @@ import { ComparisonOptions, ParsedFile } from '../types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/Card';
 import { Button } from './ui/Button';
 
+// FIX: Define the props interface for the ColumnSelector component.
 interface ColumnSelectorProps {
-  mainFile?: ParsedFile;
+  mainFile?: ParsedFile | null;
   comparisonFile: ParsedFile;
   onCompare: (selectedColumns: string[], options: ComparisonOptions) => void;
   onBack: () => void;
 }
+
+const ModernToggle: React.FC<{ id: string; checked: boolean; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; }> = ({ id, checked, onChange }) => (
+    <label htmlFor={id} className="relative inline-flex items-center cursor-pointer">
+        <input type="checkbox" id={id} className="sr-only peer" checked={checked} onChange={onChange} />
+        <div className="w-11 h-6 bg-gray-200/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r from-blue-500 to-purple-600"></div>
+    </label>
+);
 
 export const ColumnSelector: React.FC<ColumnSelectorProps> = ({ mainFile, comparisonFile, onCompare, onBack }) => {
   const columns = useMemo(() => {
@@ -23,6 +31,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({ mainFile, compar
   const [options, setOptions] = useState<ComparisonOptions>({
     caseSensitive: false,
     trimWhitespace: true,
+    ignoreSpecialChars: false,
   });
 
   const handleColumnToggle = (column: string) => {
@@ -44,7 +53,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({ mainFile, compar
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
+    <Card className="w-full max-w-4xl mx-auto animate-slide-in">
       <CardHeader>
         <CardTitle>{mainFile ? 'Select Columns to Compare' : 'Select Columns for Duplicate Check'}</CardTitle>
         <CardDescription>
@@ -54,23 +63,23 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({ mainFile, compar
           }
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-8">
         <div>
-          <h4 className="text-lg font-semibold mb-3">{mainFile ? 'Comparison Columns' : 'Columns to Check'}</h4>
-          <div className="border rounded-lg p-4 max-h-60 overflow-y-auto">
-            <div className="flex items-center border-b pb-2 mb-2">
+          <h4 className="text-lg font-semibold mb-3 text-gray-200">{mainFile ? 'Comparison Columns' : 'Columns to Check'}</h4>
+          <div className="border border-white/10 rounded-lg p-4 max-h-60 overflow-y-auto">
+            <div className="flex items-center border-b border-white/10 pb-2 mb-2">
                 <input
                     type="checkbox"
                     id="select-all"
                     checked={columns.length > 0 && selectedColumns.length === columns.length}
                     onChange={handleSelectAll}
-                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                    className="h-4 w-4 rounded border-gray-500 text-blue-500 bg-transparent focus:ring-blue-500"
                 />
-                <label htmlFor="select-all" className="ml-3 block text-sm font-medium text-gray-900">
+                <label htmlFor="select-all" className="ml-3 block text-sm font-medium text-gray-300">
                     Select All ({columns.length} columns)
                 </label>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 pt-2">
               {columns.map(col => (
                 <div key={col} className="flex items-center">
                   <input
@@ -78,9 +87,9 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({ mainFile, compar
                     id={`col-${col}`}
                     checked={selectedColumns.includes(col)}
                     onChange={() => handleColumnToggle(col)}
-                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                    className="h-4 w-4 rounded border-gray-500 text-blue-500 bg-transparent focus:ring-blue-500"
                   />
-                  <label htmlFor={`col-${col}`} className="ml-3 block text-sm text-gray-700 truncate" title={col}>
+                  <label htmlFor={`col-${col}`} className="ml-3 block text-sm text-gray-300 truncate" title={col}>
                     {col}
                   </label>
                 </div>
@@ -89,21 +98,19 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({ mainFile, compar
           </div>
         </div>
         <div>
-          <h4 className="text-lg font-semibold mb-3">Matching Options</h4>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <label htmlFor="trim-whitespace" className="text-sm text-gray-700">Ignore leading/trailing whitespace</label>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" id="trim-whitespace" className="sr-only peer" checked={options.trimWhitespace} onChange={(e) => setOptions(o => ({...o, trimWhitespace: e.target.checked}))} />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
+          <h4 className="text-lg font-semibold mb-3 text-gray-200">Matching Options</h4>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+              <label htmlFor="trim-whitespace" className="text-sm text-gray-300">Ignore leading/trailing whitespace</label>
+              <ModernToggle id="trim-whitespace" checked={options.trimWhitespace} onChange={(e) => setOptions(o => ({...o, trimWhitespace: e.target.checked}))} />
             </div>
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <label htmlFor="case-sensitive" className="text-sm text-gray-700">Case-sensitive matching</label>
-               <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" id="case-sensitive" className="sr-only peer" checked={options.caseSensitive} onChange={(e) => setOptions(o => ({...o, caseSensitive: e.target.checked}))} />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
+            <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+              <label htmlFor="case-sensitive" className="text-sm text-gray-300">Case-sensitive matching</label>
+              <ModernToggle id="case-sensitive" checked={options.caseSensitive} onChange={(e) => setOptions(o => ({...o, caseSensitive: e.target.checked}))} />
+            </div>
+             <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <label htmlFor="ignore-special-chars" className="text-sm text-gray-300">Ignore special characters (A-Z, 0-9)</label>
+                <ModernToggle id="ignore-special-chars" checked={options.ignoreSpecialChars} onChange={(e) => setOptions(o => ({...o, ignoreSpecialChars: e.target.checked}))} />
             </div>
           </div>
         </div>
