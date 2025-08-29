@@ -108,6 +108,32 @@ export const processFile = (file: File): Promise<ParsedFile> => {
   }
 };
 
+/**
+ * Manually converts an array of objects to a CSV string, handling special characters and quoting.
+ * This replaces the Papa.unparse dependency for exporting.
+ */
+const manualUnparse = (data: Record<string, any>[], headers: string[]): string => {
+    const EOL = '\r\n'; // RFC 4180 specifies CRLF line endings
+
+    const escapeField = (field: any): string => {
+        const str = String(field ?? '');
+        // If the field contains a comma, a double quote, or a newline, it must be enclosed in double quotes.
+        // Also, any double quotes within the field must be escaped by another double quote.
+        if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+            return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+    };
+
+    const headerRow = headers.map(escapeField).join(',');
+    const bodyRows = data.map(row => 
+        headers.map(header => escapeField(row[header])).join(',')
+    );
+
+    return [headerRow, ...bodyRows].join(EOL);
+};
+
+
 export const exportFile = (data: Record<string, any>[], fileName: string, format: 'xlsx' | 'csv') => {
     if (data.length === 0) {
         console.warn("Export attempted with no data.");
@@ -120,15 +146,30 @@ export const exportFile = (data: Record<string, any>[], fileName: string, format
         XLSX.utils.book_append_sheet(workbook, worksheet, "Cleaned Data");
         XLSX.writeFile(workbook, fileName);
     } else if (format === 'csv') {
-        const csv = Papa.unparse(data);
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", fileName);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        try {
+            // Get the union of all headers from the data to handle sparse/inconsistent objects
+            // FIX: Replaced the 'reduce' call with a more concise and readable 'flatMap' and 'Set' combination to resolve a potential type inference issue.
+            const allHeaders = Array.from(new Set(data.flatMap(row => Object.keys(row))));
+
+            const csv = manualUnparse(data, allHeaders);
+
+            // Add BOM for better Excel compatibility with UTF-8 characters
+            const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", fileName);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Clean up the object URL to free up memory
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Error exporting to CSV:", error);
+            alert("An error occurred while creating the CSV file. Please check the console for details.");
+        }
     }
 };
