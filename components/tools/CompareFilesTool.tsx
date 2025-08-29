@@ -5,7 +5,7 @@ import { ColumnSelector } from '../ColumnSelector';
 import { ResultsDisplay } from '../ResultsDisplay';
 import { Button } from '../ui/Button';
 import { ArrowRightIcon, SpinnerIcon } from '../ui/Icons';
-import { findDuplicates } from '../../services/duplicateDetector';
+import { findUniqueAndCommonRows } from '../../services/duplicateDetector';
 
 const CompareFilesTool: React.FC = () => {
   const [step, setStep] = useState<AppStep>(AppStep.UPLOAD);
@@ -42,8 +42,8 @@ const CompareFilesTool: React.FC = () => {
     if (mainFile && comparisonFile) {
       setStep(AppStep.PROCESSING);
       setTimeout(() => {
-        const duplicateResults = findDuplicates(mainFile, comparisonFile, selectedColumns, options);
-        setResults(duplicateResults);
+        const comparisonResults = findUniqueAndCommonRows(mainFile, comparisonFile, selectedColumns, options);
+        setResults(comparisonResults);
         setStep(AppStep.RESULTS);
       }, 500);
     }
@@ -66,14 +66,14 @@ const CompareFilesTool: React.FC = () => {
             <div className="grid md:grid-cols-2 gap-8">
               <FileUploader
                 id="main-file"
-                title="Main File"
-                description="The reference file that remains unchanged."
+                title="Base File"
+                description="The main file to compare against."
                 onFileUpload={handleMainFileUpload}
               />
               <FileUploader
                 id="comparison-file"
-                title="Comparison File"
-                description="The file to be processed and cleaned."
+                title="Source File"
+                description="The file to check for unique rows."
                 onFileUpload={handleComparisonFileUpload}
               />
             </div>
@@ -93,38 +93,41 @@ const CompareFilesTool: React.FC = () => {
         return (
           <div className="flex flex-col items-center justify-center text-center p-8 glass-card rounded-lg shadow-md animate-slide-in">
             <SpinnerIcon className="w-12 h-12 text-blue-400 mb-4" />
-            <h2 className="text-xl font-semibold text-white">Finding Duplicates...</h2>
+            <h2 className="text-xl font-semibold text-white">Finding Unique Rows...</h2>
             <p className="text-gray-400 mt-2">Please wait while we process your files.</p>
           </div>
         );
       case AppStep.RESULTS:
         if (results && comparisonFile) {
-          const noDuplicatesFound = results.totalDuplicates === 0;
+          const uniqueRows = results.cleanedData;
+          const commonRows = results.duplicates;
+          const totalUnique = uniqueRows.length;
+          const totalCommon = commonRows.length;
 
-          const tabs = noDuplicatesFound
-            ? [{ title: 'No Duplicates Found', data: comparisonFile.data, badgeType: 'success' as const }]
-            : [
-                { title: 'Duplicates Found', data: results.duplicates, badgeType: 'danger' as const },
-                { title: 'Cleaned Data', data: results.cleanedData, badgeType: 'success' as const },
-              ];
+          let description;
+          if (totalUnique === 0) {
+              description = <>All <span className="font-bold text-blue-400">{totalCommon}</span> rows in <span className="font-bold text-gray-200">{comparisonFile.name}</span> were found in the base file. No unique rows detected.</>;
+          } else if (totalCommon === 0) {
+              description = <>Success! All <span className="font-bold text-green-400">{totalUnique}</span> rows in <span className="font-bold text-gray-200">{comparisonFile.name}</span> are unique.</>;
+          } else {
+              description = <>Processed <span className="font-bold text-gray-200">{comparisonFile.name}</span>: found <span className="font-bold text-green-400">{totalUnique} unique rows</span> and <span className="font-bold text-blue-400">{totalCommon} common rows</span>.</>;
+          }
 
-          const description = noDuplicatesFound
-            ? <>
-                <span className="font-bold text-green-400">No duplicates found!</span> All {results.totalRowsProcessed} rows in{' '}
-                <span className="font-bold text-gray-200">{comparisonFile.name}</span> are unique compared to the main file.
-              </>
-            : <>
-                Found <span className="font-bold text-blue-400">{results.totalDuplicates}</span> duplicates in{' '}
-                <span className="font-bold text-gray-200">{comparisonFile.name}</span> out of {results.totalRowsProcessed} total rows.
-              </>;
-
+          const tabs = [];
+          if (totalUnique > 0) {
+            tabs.push({ title: 'Unique Rows', data: uniqueRows, badgeType: 'success' as const });
+          }
+          if (totalCommon > 0) {
+             tabs.push({ title: 'Common Rows', data: commonRows, badgeType: 'default' as const });
+          }
+          
           return (
             <ResultsDisplay
               title="Comparison Results"
               description={description}
               headers={comparisonFile.headers}
               tabs={tabs}
-              downloadableData={noDuplicatesFound ? comparisonFile.data : results.cleanedData}
+              downloadableData={uniqueRows}
               fileForExportName={comparisonFile.name}
               onRestart={handleRestart}
               restartButtonText="Start New Comparison"
@@ -140,9 +143,9 @@ const CompareFilesTool: React.FC = () => {
   return (
     <div className="w-full max-w-5xl mx-auto space-y-8">
       <header className="text-center animate-slide-in">
-        <h1 className="text-5xl font-extrabold tracking-tight gradient-text">Compare Two Files & Remove Duplicates</h1>
+        <h1 className="text-5xl font-extrabold tracking-tight gradient-text">Find Unique Rows Between Two Files</h1>
         <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
-          Identifies rows in your 'comparison' file that already exist in the 'main' file. 'Cleaned Data' contains only rows unique to the comparison file.
+          Compare a 'source' file against a 'base' file. This tool will show you which rows from the source file are unique (not found in the base file).
         </p>
       </header>
       {renderContent()}

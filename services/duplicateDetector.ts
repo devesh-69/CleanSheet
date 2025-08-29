@@ -50,7 +50,7 @@ export const findDuplicatesInSingleFile = (
   };
 };
 
-export const findDuplicates = (
+export const findUniqueAndCommonRows = (
   mainFile: ParsedFile,
   comparisonFile: ParsedFile,
   selectedColumns: string[],
@@ -58,10 +58,11 @@ export const findDuplicates = (
 ): DuplicateResult => {
   
   if (selectedColumns.length === 0) {
+    // Treat all rows as unique if no columns are selected for comparison
     return { duplicates: [], cleanedData: comparisonFile.data, totalDuplicates: 0, totalRowsProcessed: comparisonFile.rowCount };
   }
 
-  // Step 1: Find duplicates within the comparison file itself.
+  // Step 1: Find duplicates within the comparison file itself. These are guaranteed common rows.
   const intraFileResult = findDuplicatesInSingleFile(comparisonFile, selectedColumns, options);
   const internalDuplicates = intraFileResult.duplicates;
   const uniqueComparisonRows = intraFileResult.cleanedData;
@@ -74,24 +75,24 @@ export const findDuplicates = (
   }
 
   // Step 3: Compare the unique rows from the comparison file against the main file.
-  const finalDuplicates = [...internalDuplicates];
-  const finalCleanedData: Record<string, any>[] = [];
+  const commonRows = [...internalDuplicates];
+  const uniqueRows: Record<string, any>[] = [];
 
   for (const row of uniqueComparisonRows) {
     const key = generateCompositeKey(row, selectedColumns, options);
     if (mainFileKeys.has(key)) {
       // This row is unique within the comparison file, but exists in the main file.
-      finalDuplicates.push(row);
+      commonRows.push(row);
     } else {
       // This row is unique to the comparison file.
-      finalCleanedData.push(row);
+      uniqueRows.push(row);
     }
   }
 
   return {
-    duplicates: finalDuplicates,
-    cleanedData: finalCleanedData,
-    totalDuplicates: finalDuplicates.length,
+    duplicates: commonRows, // "duplicates" property now holds common rows
+    cleanedData: uniqueRows,  // "cleanedData" property now holds unique rows
+    totalDuplicates: commonRows.length,
     totalRowsProcessed: comparisonFile.rowCount,
   };
 };

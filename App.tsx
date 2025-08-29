@@ -12,11 +12,11 @@ import QuickSummaryTool from './components/tools/QuickSummaryTool';
 
 
 const App: React.FC = () => {
-  const [activeTool, setActiveTool] = useState<Tool>(Tool.COMPARE_FILES);
+  const [activeTool, setActiveTool] = useState<Tool>(Tool.FIND_UNIQUE_ROWS);
 
   const renderActiveTool = () => {
     switch (activeTool) {
-      case Tool.COMPARE_FILES:
+      case Tool.FIND_UNIQUE_ROWS:
         return <CompareFilesTool />;
       case Tool.SINGLE_FILE_DUPLICATES:
         return <SingleFileDuplicateRemover />;

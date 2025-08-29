@@ -58,7 +58,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTool, setActiveTool }) =
         <div>
            <h3 className="px-4 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Advanced Tools</h3>
            <nav className="space-y-2">
-            <NavLink icon={<LayoutGridIcon className="w-5 h-5" />} label="Compare Two Files" tool={Tool.COMPARE_FILES} activeTool={activeTool} onClick={setActiveTool} />
+            <NavLink icon={<LayoutGridIcon className="w-5 h-5" />} label="Find Unique Rows" tool={Tool.FIND_UNIQUE_ROWS} activeTool={activeTool} onClick={setActiveTool} />
             <NavLink icon={<CombineIcon className="w-5 h-5" />} label="Merge Multiple Files" tool={Tool.MERGE_FILES} activeTool={activeTool} onClick={setActiveTool} />
             <NavLink icon={<ColumnsIcon className="w-5 h-5" />} label="Compare Columns" tool={Tool.COMPARE_COLUMNS} activeTool={activeTool} onClick={setActiveTool} />
             <NavLink icon={<PieChartIcon className="w-5 h-5" />} label="Quick Summary" tool={Tool.QUICK_SUMMARY} activeTool={activeTool} onClick={setActiveTool} />
