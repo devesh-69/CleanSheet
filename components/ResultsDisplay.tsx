@@ -50,7 +50,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     exportFile(downloadableData, fileName, format);
   };
 
-  const showTabs = tabs.length > 1;
+  const showTabs = tabs.length > 0;
 
   return (
     <Card className="w-full max-w-6xl mx-auto animate-slide-in">
@@ -64,13 +64,22 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                 <div className="border-b border-white/10">
                     <nav className="-mb-px flex space-x-8" aria-label="Tabs">
                         {tabs.map((tab, index) => (
-                             <button
-                                key={tab.title}
-                                onClick={() => { setActiveTabIndex(index); setCurrentPage(1); }}
-                                className={`${activeTabIndex === index ? 'border-blue-500 text-blue-400' : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200`}
-                            >
-                                {tab.title} <Badge type={tab.badgeType} count={tab.data.length} />
-                            </button>
+                            tabs.length > 1 ? (
+                                <button
+                                    key={tab.title}
+                                    onClick={() => { setActiveTabIndex(index); setCurrentPage(1); }}
+                                    className={`${activeTabIndex === index ? 'border-blue-500 text-blue-400' : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200`}
+                                >
+                                    {tab.title} <Badge type={tab.badgeType} count={tab.data.length} />
+                                </button>
+                            ) : (
+                                <span
+                                    key={tab.title}
+                                    className="border-blue-500 text-blue-400 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+                                >
+                                    {tab.title} <Badge type={tab.badgeType} count={tab.data.length} />
+                                </span>
+                            )
                         ))}
                     </nav>
                 </div>

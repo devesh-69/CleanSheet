@@ -67,6 +67,15 @@ const SingleFileDuplicateRemover: React.FC = () => {
                 );
             case AppStep.RESULTS:
                 if (results && file) {
+                    const tabs = results.totalDuplicates > 0
+                        ? [
+                            { title: 'Duplicates Found', data: results.duplicates, badgeType: 'danger' as const },
+                            { title: 'Cleaned Data', data: results.cleanedData, badgeType: 'success' as const },
+                            ]
+                        : [
+                            { title: 'No Duplicates Found', data: results.cleanedData, badgeType: 'success' as const },
+                            ];
+                    
                     return (
                          <ResultsDisplay
                             title="Processing Results"
@@ -77,10 +86,7 @@ const SingleFileDuplicateRemover: React.FC = () => {
                                 </>
                             }
                             headers={file.headers}
-                            tabs={[
-                                { title: 'Duplicates Found', data: results.duplicates, badgeType: 'danger' },
-                                { title: 'Cleaned Data', data: results.cleanedData, badgeType: 'success' },
-                            ]}
+                            tabs={tabs}
                             downloadableData={results.cleanedData}
                             fileForExportName={file.name}
                             onRestart={handleRestart}

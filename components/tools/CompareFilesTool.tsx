@@ -99,6 +99,15 @@ const CompareFilesTool: React.FC = () => {
         );
       case AppStep.RESULTS:
         if (results && comparisonFile) {
+          const tabs = results.totalDuplicates > 0
+            ? [
+                { title: 'Duplicates Found', data: results.duplicates, badgeType: 'danger' as const },
+                { title: 'Cleaned Data', data: results.cleanedData, badgeType: 'success' as const },
+              ]
+            : [
+                { title: 'No Duplicates Found', data: results.cleanedData, badgeType: 'success' as const },
+              ];
+
           return (
             <ResultsDisplay
               title="Comparison Results"
@@ -109,10 +118,7 @@ const CompareFilesTool: React.FC = () => {
                 </>
               }
               headers={comparisonFile.headers}
-              tabs={[
-                { title: 'Duplicates Found', data: results.duplicates, badgeType: 'danger' },
-                { title: 'Cleaned Data', data: results.cleanedData, badgeType: 'success' },
-              ]}
+              tabs={tabs}
               downloadableData={results.cleanedData}
               fileForExportName={comparisonFile.name}
               onRestart={handleRestart}
