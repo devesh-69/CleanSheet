@@ -18,60 +18,6 @@ const generateCompositeKey = (row: Record<string, any>, columns: string[], optio
     .join('||');
 };
 
-export const findDuplicates = (
-  mainFile: ParsedFile,
-  comparisonFile: ParsedFile,
-  selectedColumns: string[],
-  options: ComparisonOptions
-): DuplicateResult => {
-  
-  if (selectedColumns.length === 0) {
-    return { duplicates: [], cleanedData: comparisonFile.data, totalDuplicates: 0, totalRowsProcessed: comparisonFile.rowCount };
-  }
-
-  const mainFileKeys = new Set<string>();
-  for (const row of mainFile.data) {
-    const key = generateCompositeKey(row, selectedColumns, options);
-    mainFileKeys.add(key);
-  }
-
-  const duplicates: Record<string, any>[] = [];
-  const cleanDataCandidates: Record<string, any>[] = [];
-
-  // First, separate rows from the comparison file into two groups:
-  // 1. Duplicates: rows that are also present in the main file.
-  // 2. Clean Data Candidates: rows that are not in the main file.
-  for (const row of comparisonFile.data) {
-    const key = generateCompositeKey(row, selectedColumns, options);
-    if (mainFileKeys.has(key)) {
-      duplicates.push(row);
-    } else {
-      cleanDataCandidates.push(row);
-    }
-  }
-
-  // Second, process the clean data candidates to remove any intra-file duplicates from this set,
-  // moving them to the main duplicates list.
-  const cleanedData: Record<string, any>[] = [];
-  const cleanedDataKeys = new Set<string>();
-  for (const row of cleanDataCandidates) {
-    const key = generateCompositeKey(row, selectedColumns, options);
-    if (!cleanedDataKeys.has(key)) {
-      cleanedData.push(row);
-      cleanedDataKeys.add(key);
-    } else {
-      duplicates.push(row);
-    }
-  }
-
-  return {
-    duplicates,
-    cleanedData,
-    totalDuplicates: duplicates.length,
-    totalRowsProcessed: comparisonFile.rowCount,
-  };
-};
-
 export const findDuplicatesInSingleFile = (
   file: ParsedFile,
   selectedColumns: string[],
@@ -101,5 +47,51 @@ export const findDuplicatesInSingleFile = (
     cleanedData,
     totalDuplicates: duplicates.length,
     totalRowsProcessed: file.rowCount,
+  };
+};
+
+export const findDuplicates = (
+  mainFile: ParsedFile,
+  comparisonFile: ParsedFile,
+  selectedColumns: string[],
+  options: ComparisonOptions
+): DuplicateResult => {
+  
+  if (selectedColumns.length === 0) {
+    return { duplicates: [], cleanedData: comparisonFile.data, totalDuplicates: 0, totalRowsProcessed: comparisonFile.rowCount };
+  }
+
+  // Step 1: Find duplicates within the comparison file itself.
+  const intraFileResult = findDuplicatesInSingleFile(comparisonFile, selectedColumns, options);
+  const internalDuplicates = intraFileResult.duplicates;
+  const uniqueComparisonRows = intraFileResult.cleanedData;
+
+  // Step 2: Create a set of keys from the main file for efficient lookup.
+  const mainFileKeys = new Set<string>();
+  for (const row of mainFile.data) {
+    const key = generateCompositeKey(row, selectedColumns, options);
+    mainFileKeys.add(key);
+  }
+
+  // Step 3: Compare the unique rows from the comparison file against the main file.
+  const finalDuplicates = [...internalDuplicates];
+  const finalCleanedData: Record<string, any>[] = [];
+
+  for (const row of uniqueComparisonRows) {
+    const key = generateCompositeKey(row, selectedColumns, options);
+    if (mainFileKeys.has(key)) {
+      // This row is unique within the comparison file, but exists in the main file.
+      finalDuplicates.push(row);
+    } else {
+      // This row is unique to the comparison file.
+      finalCleanedData.push(row);
+    }
+  }
+
+  return {
+    duplicates: finalDuplicates,
+    cleanedData: finalCleanedData,
+    totalDuplicates: finalDuplicates.length,
+    totalRowsProcessed: comparisonFile.rowCount,
   };
 };

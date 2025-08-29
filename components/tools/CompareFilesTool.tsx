@@ -142,7 +142,7 @@ const CompareFilesTool: React.FC = () => {
       <header className="text-center animate-slide-in">
         <h1 className="text-5xl font-extrabold tracking-tight gradient-text">Compare Two Files & Remove Duplicates</h1>
         <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
-          Compare a 'comparison' file against a 'main' file to find and remove duplicate rows.
+          Identifies rows in your 'comparison' file that already exist in the 'main' file. 'Cleaned Data' contains only rows unique to the comparison file.
         </p>
       </header>
       {renderContent()}
