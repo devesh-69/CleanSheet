@@ -3,9 +3,11 @@ import { ParsedFile, AppStep } from '../../types';
 import { MultiFileUploader } from '../MultiFileUploader';
 import { ResultsDisplay } from '../ResultsDisplay';
 import { mergeFiles } from '../../services/dataCleaner';
-import { SpinnerIcon } from '../ui/Icons';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/Card';
 import { Button } from '../ui/Button';
+import { ToolHeader } from '../ToolHeader';
+import { ProcessingIndicator } from '../ProcessingIndicator';
+import { Toggle } from '../ui/Toggle';
 
 interface MergeOptions {
     addSourceColumn: boolean;
@@ -15,13 +17,6 @@ interface MergeResult {
     mergedData: Record<string, any>[];
     mergedHeaders: string[];
 }
-
-const ModernToggle: React.FC<{ id: string; checked: boolean; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; }> = ({ id, checked, onChange }) => (
-    <label htmlFor={id} className="relative inline-flex items-center cursor-pointer">
-        <input type="checkbox" id={id} className="sr-only peer" checked={checked} onChange={onChange} />
-        <div className="w-11 h-6 bg-gray-200/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r from-blue-500 to-purple-600"></div>
-    </label>
-);
 
 const OptionsSelector: React.FC<{
     onProcess: (options: MergeOptions) => void,
@@ -38,7 +33,7 @@ const OptionsSelector: React.FC<{
             <CardContent>
                  <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                     <label htmlFor="add-source-col" className="text-sm text-gray-300">Add a column with original file name</label>
-                    <ModernToggle id="add-source-col" checked={options.addSourceColumn} onChange={(e) => setOptions(o => ({...o, addSourceColumn: e.target.checked}))} />
+                    <Toggle id="add-source-col" checked={options.addSourceColumn} onChange={(e) => setOptions(o => ({...o, addSourceColumn: e.target.checked}))} />
                 </div>
             </CardContent>
              <CardFooter className="flex justify-between">
@@ -91,13 +86,7 @@ const MergeFilesTool: React.FC = () => {
             case AppStep.SELECT_COLUMNS:
                 return <OptionsSelector onProcess={handleProcess} onBack={() => setStep(AppStep.UPLOAD)} fileCount={files.length} />;
             case AppStep.PROCESSING:
-                return (
-                    <div className="flex flex-col items-center justify-center text-center p-8 glass-card rounded-lg animate-slide-in">
-                        <SpinnerIcon className="w-12 h-12 text-blue-400 mb-4" />
-                        <h2 className="text-xl font-semibold text-white">Merging Files...</h2>
-                        <p className="text-gray-400 mt-2">Please wait while we combine your spreadsheets.</p>
-                    </div>
-                );
+                return <ProcessingIndicator title="Merging Files..." description="Please wait while we combine your spreadsheets." />;
             case AppStep.RESULTS:
                 if (result) {
                     return <ResultsDisplay 
@@ -117,12 +106,10 @@ const MergeFilesTool: React.FC = () => {
 
     return (
         <div className="w-full max-w-5xl mx-auto space-y-8">
-            <header className="text-center animate-slide-in">
-                <h1 className="text-5xl font-extrabold tracking-tight gradient-text">Merge Multiple Files</h1>
-                <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
-                    Combine multiple CSV or Excel files into one. The tool will automatically create a unified set of columns.
-                </p>
-            </header>
+            <ToolHeader
+                title="Merge Multiple Files"
+                description="Combine multiple CSV or Excel files into one. The tool will automatically create a unified set of columns."
+            />
             {renderContent()}
         </div>
     );

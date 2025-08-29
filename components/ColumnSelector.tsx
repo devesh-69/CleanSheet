@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { ComparisonOptions, ParsedFile } from '../types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/Card';
 import { Button } from './ui/Button';
+import { Toggle } from './ui/Toggle';
 
 // FIX: Define the props interface for the ColumnSelector component.
 interface ColumnSelectorProps {
@@ -10,13 +11,6 @@ interface ColumnSelectorProps {
   onCompare: (selectedColumns: string[], options: ComparisonOptions) => void;
   onBack: () => void;
 }
-
-const ModernToggle: React.FC<{ id: string; checked: boolean; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; }> = ({ id, checked, onChange }) => (
-    <label htmlFor={id} className="relative inline-flex items-center cursor-pointer">
-        <input type="checkbox" id={id} className="sr-only peer" checked={checked} onChange={onChange} />
-        <div className="w-11 h-6 bg-gray-200/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r from-blue-500 to-purple-600"></div>
-    </label>
-);
 
 export const ColumnSelector: React.FC<ColumnSelectorProps> = ({ mainFile, comparisonFile, onCompare, onBack }) => {
   const columns = useMemo(() => {
@@ -102,15 +96,15 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({ mainFile, compar
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
               <label htmlFor="trim-whitespace" className="text-sm text-gray-300">Ignore leading/trailing whitespace</label>
-              <ModernToggle id="trim-whitespace" checked={options.trimWhitespace} onChange={(e) => setOptions(o => ({...o, trimWhitespace: e.target.checked}))} />
+              <Toggle id="trim-whitespace" checked={options.trimWhitespace} onChange={(e) => setOptions(o => ({...o, trimWhitespace: e.target.checked}))} />
             </div>
             <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
               <label htmlFor="case-sensitive" className="text-sm text-gray-300">Case-sensitive matching</label>
-              <ModernToggle id="case-sensitive" checked={options.caseSensitive} onChange={(e) => setOptions(o => ({...o, caseSensitive: e.target.checked}))} />
+              <Toggle id="case-sensitive" checked={options.caseSensitive} onChange={(e) => setOptions(o => ({...o, caseSensitive: e.target.checked}))} />
             </div>
              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                 <label htmlFor="ignore-special-chars" className="text-sm text-gray-300">Ignore special characters (A-Z, 0-9)</label>
-                <ModernToggle id="ignore-special-chars" checked={options.ignoreSpecialChars} onChange={(e) => setOptions(o => ({...o, ignoreSpecialChars: e.target.checked}))} />
+                <Toggle id="ignore-special-chars" checked={options.ignoreSpecialChars} onChange={(e) => setOptions(o => ({...o, ignoreSpecialChars: e.target.checked}))} />
             </div>
           </div>
         </div>

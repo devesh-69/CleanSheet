@@ -3,9 +3,10 @@ import { ParsedFile, AppStep, SpecialCharsOptions } from '../../types';
 import { FileUploader } from '../FileUploader';
 import { ResultsDisplay } from '../ResultsDisplay';
 import { removeSpecialChars } from '../../services/dataCleaner';
-import { SpinnerIcon } from '../ui/Icons';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/Card';
 import { Button } from '../ui/Button';
+import { ToolHeader } from '../ToolHeader';
+import { ProcessingIndicator } from '../ProcessingIndicator';
 
 const OptionsSelector: React.FC<{
     file: ParsedFile,
@@ -144,13 +145,7 @@ const SpecialCharsTool: React.FC = () => {
                 }
                 return null;
             case AppStep.PROCESSING:
-                return (
-                    <div className="flex flex-col items-center justify-center text-center p-8 glass-card rounded-lg animate-slide-in">
-                        <SpinnerIcon className="w-12 h-12 text-blue-400 mb-4" />
-                        <h2 className="text-xl font-semibold text-white">Cleaning Your File...</h2>
-                        <p className="text-gray-400 mt-2">Please wait while we remove the special characters.</p>
-                    </div>
-                );
+                return <ProcessingIndicator title="Cleaning Your File..." description="Please wait while we remove the special characters." />;
             case AppStep.RESULTS:
                 if (processedData && file) {
                     return <ResultsDisplay 
@@ -170,12 +165,10 @@ const SpecialCharsTool: React.FC = () => {
 
     return (
         <div className="w-full max-w-5xl mx-auto space-y-8">
-            <header className="text-center animate-slide-in">
-                <h1 className="text-5xl font-extrabold tracking-tight gradient-text">Special Characters Remover</h1>
-                <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
-                    Clean your spreadsheets by removing punctuation, symbols, emojis, and other unwanted characters from selected columns.
-                </p>
-            </header>
+            <ToolHeader
+                title="Special Characters Remover"
+                description="Clean your spreadsheets by removing punctuation, symbols, emojis, and other unwanted characters from selected columns."
+            />
             {renderContent()}
         </div>
     );

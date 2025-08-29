@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '../ui/Card';
 import { SparklesIcon } from '../ui/Icons';
+import { ToolHeader } from '../ToolHeader';
 
 interface PlaceholderToolProps {
   title: string;
@@ -10,12 +11,10 @@ interface PlaceholderToolProps {
 const PlaceholderTool: React.FC<PlaceholderToolProps> = ({ title, description }) => {
   return (
     <div className="w-full max-w-5xl mx-auto space-y-8">
-       <header className="text-center animate-slide-in">
-        <h1 className="text-5xl font-extrabold tracking-tight gradient-text">{title}</h1>
-        <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
-          {description || 'This feature is coming soon. Stay tuned!'}
-        </p>
-      </header>
+       <ToolHeader 
+        title={title} 
+        description={description || 'This feature is coming soon. Stay tuned!'}
+      />
       <Card className="animate-slide-in">
         <CardContent className="p-6">
           <div className="flex flex-col items-center justify-center text-center p-16 border-2 border-dashed border-white/20 rounded-lg bg-white/5">

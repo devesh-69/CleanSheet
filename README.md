@@ -1,8 +1,8 @@
-# duplisheets
+# Duplisheets
 
 A modern, browser-based utility belt for cleaning, comparing, and processing spreadsheet files. No need to install any software—just drag, drop, and get your cleaned data instantly.
 
-![duplisheets Screenshot](https://storage.googleapis.com/proud-booth-3333/excel-duplicate-remover-screenshot.png)
+![Duplisheets Screenshot](https://storage.googleapis.com/proud-booth-3333/excel-duplicate-remover-screenshot.png)
 
 ## ✨ Features
 
@@ -40,11 +40,11 @@ This project is designed to be simple to run locally without any complex build s
 ### Installation
 1.  Clone the repository to your local machine:
     ```bash
-    git clone https://github.com/your-username/duplisheets.git
+    git clone https://github.com/your-username/Duplisheets.git
     ```
 2.  Navigate into the project directory:
     ```bash
-    cd duplisheets
+    cd Duplisheets
     ```
 3.  Open the `index.html` file directly in your web browser. That's it!
 
@@ -59,8 +59,8 @@ Click the "Fork" button at the top-right corner of the original repository page.
 ### 2. Clone Your Fork
 Clone the repository from your account to your local machine. Replace `your-username` with your actual GitHub username.
 ```bash
-git clone https://github.com/your-username/duplisheets.git
-cd duplisheets
+git clone https://github.com/your-username/Duplisheets.git
+cd Duplisheets
 ```
 
 ### 3. Create a New Branch

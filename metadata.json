@@ -1,5 +1,5 @@
 {
-  "name": "duplisheets",
-  "description": "A modern, browser-based utility belt for cleaning, comparing, and processing spreadsheet files to find unique rows, remove duplicates, and more.",
+  "name": "Duplisheets",
+  "description": "Instantly clean, compare, and merge your spreadsheets. Find unique rows, remove duplicates, and more—all securely in your browser. No installation needed.",
   "requestFramePermissions": []
 }

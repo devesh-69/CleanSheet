@@ -3,9 +3,10 @@ import { ParsedFile, AppStep, SummaryOptions, SummaryFunction } from '../../type
 import { FileUploader } from '../FileUploader';
 import { ResultsDisplay } from '../ResultsDisplay';
 import { generateSummaryReport } from '../../services/dataCleaner';
-import { SpinnerIcon } from '../ui/Icons';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/Card';
 import { Button } from '../ui/Button';
+import { ToolHeader } from '../ToolHeader';
+import { ProcessingIndicator } from '../ProcessingIndicator';
 
 // A simple heuristic to find columns that likely contain numbers
 const getNumericColumns = (file: ParsedFile): string[] => {
@@ -166,13 +167,7 @@ const QuickSummaryTool: React.FC = () => {
                 }
                 return null;
             case AppStep.PROCESSING:
-                return (
-                    <div className="flex flex-col items-center justify-center text-center p-8 glass-card rounded-lg animate-slide-in">
-                        <SpinnerIcon className="w-12 h-12 text-blue-400 mb-4" />
-                        <h2 className="text-xl font-semibold text-white">Generating Summary...</h2>
-                        <p className="text-gray-400 mt-2">Please wait while we analyze your data.</p>
-                    </div>
-                );
+                return <ProcessingIndicator title="Generating Summary..." description="Please wait while we analyze your data." />;
             case AppStep.RESULTS:
                 if (result && file) {
                     return <ResultsDisplay 
@@ -192,12 +187,10 @@ const QuickSummaryTool: React.FC = () => {
 
     return (
         <div className="w-full max-w-5xl mx-auto space-y-8">
-            <header className="text-center animate-slide-in">
-                <h1 className="text-5xl font-extrabold tracking-tight gradient-text">Quick Summary Report</h1>
-                <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
-                    Generate a pivot-like summary from your data by grouping and calculating values from selected columns.
-                </p>
-            </header>
+            <ToolHeader
+                title="Quick Summary Report"
+                description="Generate a pivot-like summary from your data by grouping and calculating values from selected columns."
+            />
             {renderContent()}
         </div>
     );

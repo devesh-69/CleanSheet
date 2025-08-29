@@ -3,16 +3,11 @@ import { ParsedFile, AppStep, ComparisonOptions, ColumnComparisonResult } from '
 import { FileUploader } from '../FileUploader';
 import { ResultsDisplay } from '../ResultsDisplay';
 import { compareColumns } from '../../services/dataCleaner';
-import { SpinnerIcon } from '../ui/Icons';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/Card';
 import { Button } from '../ui/Button';
-
-const ModernToggle: React.FC<{ id: string; checked: boolean; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; }> = ({ id, checked, onChange }) => (
-    <label htmlFor={id} className="relative inline-flex items-center cursor-pointer">
-        <input type="checkbox" id={id} className="sr-only peer" checked={checked} onChange={onChange} />
-        <div className="w-11 h-6 bg-gray-200/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r from-blue-500 to-purple-600"></div>
-    </label>
-);
+import { Toggle } from '../ui/Toggle';
+import { ToolHeader } from '../ToolHeader';
+import { ProcessingIndicator } from '../ProcessingIndicator';
 
 const OptionsSelector: React.FC<{
     file: ParsedFile,
@@ -70,15 +65,15 @@ const OptionsSelector: React.FC<{
                     <div className="space-y-3">
                         <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                             <label htmlFor="trim-whitespace" className="text-sm text-gray-300">Ignore leading/trailing whitespace</label>
-                            <ModernToggle id="trim-whitespace" checked={options.trimWhitespace} onChange={(e) => setOptions(o => ({...o, trimWhitespace: e.target.checked}))} />
+                            <Toggle id="trim-whitespace" checked={options.trimWhitespace} onChange={(e) => setOptions(o => ({...o, trimWhitespace: e.target.checked}))} />
                         </div>
                         <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                             <label htmlFor="case-sensitive" className="text-sm text-gray-300">Case-sensitive matching</label>
-                            <ModernToggle id="case-sensitive" checked={options.caseSensitive} onChange={(e) => setOptions(o => ({...o, caseSensitive: e.target.checked}))} />
+                            <Toggle id="case-sensitive" checked={options.caseSensitive} onChange={(e) => setOptions(o => ({...o, caseSensitive: e.target.checked}))} />
                         </div>
                          <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                             <label htmlFor="ignore-special-chars-cols" className="text-sm text-gray-300">Ignore special characters (A-Z, 0-9)</label>
-                            <ModernToggle id="ignore-special-chars-cols" checked={options.ignoreSpecialChars} onChange={(e) => setOptions(o => ({...o, ignoreSpecialChars: e.target.checked}))} />
+                            <Toggle id="ignore-special-chars-cols" checked={options.ignoreSpecialChars} onChange={(e) => setOptions(o => ({...o, ignoreSpecialChars: e.target.checked}))} />
                         </div>
                     </div>
                 </div>
@@ -140,13 +135,7 @@ const CompareColumnsTool: React.FC = () => {
                 }
                 return null;
             case AppStep.PROCESSING:
-                return (
-                    <div className="flex flex-col items-center justify-center text-center p-8 glass-card rounded-lg animate-slide-in">
-                        <SpinnerIcon className="w-12 h-12 text-blue-400 mb-4" />
-                        <h2 className="text-xl font-semibold text-white">Comparing Columns...</h2>
-                        <p className="text-gray-400 mt-2">Please wait while we check for differences.</p>
-                    </div>
-                );
+                return <ProcessingIndicator title="Comparing Columns..." description="Please wait while we check for differences." />;
             case AppStep.RESULTS:
                 if (result && file) {
                     return <ResultsDisplay 
@@ -166,12 +155,10 @@ const CompareColumnsTool: React.FC = () => {
 
     return (
         <div className="w-full max-w-5xl mx-auto space-y-8">
-            <header className="text-center animate-slide-in">
-                <h1 className="text-5xl font-extrabold tracking-tight gradient-text">Compare Columns Within a File</h1>
-                <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
-                    Find rows where values in two different columns do not match.
-                </p>
-            </header>
+            <ToolHeader
+                title="Compare Columns Within a File"
+                description="Find rows where values in two different columns do not match."
+            />
             {renderContent()}
         </div>
     );

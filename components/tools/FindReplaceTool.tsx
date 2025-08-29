@@ -1,18 +1,14 @@
 import React, { useState } from 'react';
-import { ParsedFile, AppStep, FindReplaceOptions, FindReplaceOperation } from '../../types';
+import { ParsedFile, AppStep, FindReplaceOptions } from '../../types';
 import { FileUploader } from '../FileUploader';
 import { ResultsDisplay } from '../ResultsDisplay';
 import { findAndReplace } from '../../services/dataCleaner';
-import { SpinnerIcon, XCircleIcon } from '../ui/Icons';
+import { XCircleIcon } from '../ui/Icons';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/Card';
 import { Button } from '../ui/Button';
-
-const ModernToggle: React.FC<{ id: string; checked: boolean; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; }> = ({ id, checked, onChange }) => (
-    <label htmlFor={id} className="relative inline-flex items-center cursor-pointer">
-        <input type="checkbox" id={id} className="sr-only peer" checked={checked} onChange={onChange} />
-        <div className="w-11 h-6 bg-gray-200/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r from-blue-500 to-purple-600"></div>
-    </label>
-);
+import { Toggle } from '../ui/Toggle';
+import { ToolHeader } from '../ToolHeader';
+import { ProcessingIndicator } from '../ProcessingIndicator';
 
 const OptionsSelector: React.FC<{
     file: ParsedFile,
@@ -119,11 +115,11 @@ const OptionsSelector: React.FC<{
                     <div className="space-y-3">
                         <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                             <label htmlFor="case-sensitive" className="text-sm text-gray-300">Case-sensitive matching</label>
-                            <ModernToggle id="case-sensitive" checked={options.caseSensitive} onChange={(e) => setOptions(o => ({...o, caseSensitive: e.target.checked}))} />
+                            <Toggle id="case-sensitive" checked={options.caseSensitive} onChange={(e) => setOptions(o => ({...o, caseSensitive: e.target.checked}))} />
                         </div>
                         <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                             <label htmlFor="match-entire-cell" className="text-sm text-gray-300">Match entire cell value</label>
-                            <ModernToggle id="match-entire-cell" checked={options.matchEntireCell} onChange={(e) => setOptions(o => ({...o, matchEntireCell: e.target.checked}))} />
+                            <Toggle id="match-entire-cell" checked={options.matchEntireCell} onChange={(e) => setOptions(o => ({...o, matchEntireCell: e.target.checked}))} />
                         </div>
                     </div>
                 </div>
@@ -183,13 +179,7 @@ const FindReplaceTool: React.FC = () => {
                 }
                 return null;
             case AppStep.PROCESSING:
-                return (
-                    <div className="flex flex-col items-center justify-center text-center p-8 glass-card rounded-lg animate-slide-in">
-                        <SpinnerIcon className="w-12 h-12 text-blue-400 mb-4" />
-                        <h2 className="text-xl font-semibold text-white">Applying Changes...</h2>
-                        <p className="text-gray-400 mt-2">Please wait while we process your file.</p>
-                    </div>
-                );
+                return <ProcessingIndicator title="Applying Changes..." description="Please wait while we process your file." />;
             case AppStep.RESULTS:
                 if (processedData && file) {
                     return <ResultsDisplay 
@@ -209,12 +199,10 @@ const FindReplaceTool: React.FC = () => {
 
     return (
         <div className="w-full max-w-5xl mx-auto space-y-8">
-            <header className="text-center animate-slide-in">
-                <h1 className="text-5xl font-extrabold tracking-tight gradient-text">Find & Replace (Bulk)</h1>
-                <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
-                    Efficiently perform multiple find and replace operations across selected columns in your spreadsheet.
-                </p>
-            </header>
+            <ToolHeader
+                title="Find & Replace (Bulk)"
+                description="Efficiently perform multiple find and replace operations across selected columns in your spreadsheet."
+            />
             {renderContent()}
         </div>
     );

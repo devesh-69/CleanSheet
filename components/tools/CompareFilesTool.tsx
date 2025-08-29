@@ -4,8 +4,10 @@ import { FileUploader } from '../FileUploader';
 import { ColumnSelector } from '../ColumnSelector';
 import { ResultsDisplay } from '../ResultsDisplay';
 import { Button } from '../ui/Button';
-import { ArrowRightIcon, SpinnerIcon } from '../ui/Icons';
+import { ArrowRightIcon } from '../ui/Icons';
 import { findUniqueAndCommonRows } from '../../services/duplicateDetector';
+import { ToolHeader } from '../ToolHeader';
+import { ProcessingIndicator } from '../ProcessingIndicator';
 
 const CompareFilesTool: React.FC = () => {
   const [step, setStep] = useState<AppStep>(AppStep.UPLOAD);
@@ -90,13 +92,7 @@ const CompareFilesTool: React.FC = () => {
         }
         return null;
       case AppStep.PROCESSING:
-        return (
-          <div className="flex flex-col items-center justify-center text-center p-8 glass-card rounded-lg shadow-md animate-slide-in">
-            <SpinnerIcon className="w-12 h-12 text-blue-400 mb-4" />
-            <h2 className="text-xl font-semibold text-white">Finding Unique Rows...</h2>
-            <p className="text-gray-400 mt-2">Please wait while we process your files.</p>
-          </div>
-        );
+        return <ProcessingIndicator title="Finding Unique Rows..." description="Please wait while we process your files." />;
       case AppStep.RESULTS:
         if (results && comparisonFile) {
           const uniqueRows = results.cleanedData;
@@ -142,12 +138,10 @@ const CompareFilesTool: React.FC = () => {
 
   return (
     <div className="w-full max-w-5xl mx-auto space-y-8">
-      <header className="text-center animate-slide-in">
-        <h1 className="text-5xl font-extrabold tracking-tight gradient-text">Find Unique Rows Between Two Files</h1>
-        <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
-          Compare a 'source' file against a 'base' file. This tool will show you which rows from the source file are unique (not found in the base file).
-        </p>
-      </header>
+      <ToolHeader 
+        title="Find Unique Rows Between Two Files" 
+        description="Compare a 'source' file against a 'base' file. This tool will show you which rows from the source file are unique (not found in the base file)." 
+      />
       {renderContent()}
     </div>
   );
