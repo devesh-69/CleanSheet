@@ -99,27 +99,32 @@ const CompareFilesTool: React.FC = () => {
         );
       case AppStep.RESULTS:
         if (results && comparisonFile) {
-          const tabs = results.totalDuplicates > 0
-            ? [
+          const noDuplicatesFound = results.totalDuplicates === 0;
+
+          const tabs = noDuplicatesFound
+            ? [{ title: 'No Duplicates Found', data: comparisonFile.data, badgeType: 'success' as const }]
+            : [
                 { title: 'Duplicates Found', data: results.duplicates, badgeType: 'danger' as const },
                 { title: 'Cleaned Data', data: results.cleanedData, badgeType: 'success' as const },
-              ]
-            : [
-                { title: 'No Duplicates Found', data: results.cleanedData, badgeType: 'success' as const },
               ];
+
+          const description = noDuplicatesFound
+            ? <>
+                <span className="font-bold text-green-400">No duplicates found!</span> All {results.totalRowsProcessed} rows in{' '}
+                <span className="font-bold text-gray-200">{comparisonFile.name}</span> are unique compared to the main file.
+              </>
+            : <>
+                Found <span className="font-bold text-blue-400">{results.totalDuplicates}</span> duplicates in{' '}
+                <span className="font-bold text-gray-200">{comparisonFile.name}</span> out of {results.totalRowsProcessed} total rows.
+              </>;
 
           return (
             <ResultsDisplay
               title="Comparison Results"
-              description={
-                <>
-                  Found <span className="font-bold text-blue-400">{results.totalDuplicates}</span> duplicates in{' '}
-                  <span className="font-bold text-gray-200">{comparisonFile.name}</span> out of {results.totalRowsProcessed} total rows.
-                </>
-              }
+              description={description}
               headers={comparisonFile.headers}
               tabs={tabs}
-              downloadableData={results.cleanedData}
+              downloadableData={noDuplicatesFound ? comparisonFile.data : results.cleanedData}
               fileForExportName={comparisonFile.name}
               onRestart={handleRestart}
               restartButtonText="Start New Comparison"
