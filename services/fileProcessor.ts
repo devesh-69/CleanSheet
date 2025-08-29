@@ -12,17 +12,26 @@ const parseExcel = (file: File): Promise<ParsedFile> => {
         const data = e.target?.result;
         const workbook = XLSX.read(data, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
+
+        if (!sheetName) {
+          return reject(new Error('The Excel file appears to be empty or contains no sheets.'));
+        }
+        
         const worksheet = workbook.Sheets[sheetName];
         const jsonData: Record<string, any>[] = XLSX.utils.sheet_to_json(worksheet);
 
         if (jsonData.length === 0) {
+          // Handle sheets with only headers and no data rows
+          const headerRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+          const headers = (headerRows[0] as string[]) || [];
+
           resolve({
             name: file.name,
             size: file.size,
-            headers: [],
+            headers: headers,
             data: [],
             rowCount: 0,
-            columnCount: 0,
+            columnCount: headers.length,
           });
           return;
         }
@@ -37,10 +46,10 @@ const parseExcel = (file: File): Promise<ParsedFile> => {
           columnCount: headers.length,
         });
       } catch (error) {
-        reject(new Error('Failed to parse Excel file.'));
+        reject(new Error('Failed to parse Excel file. The file may be corrupt or in an unsupported format.'));
       }
     };
-    reader.onerror = (error) => reject(error);
+    reader.onerror = (error) => reject(new Error('Error reading file content. Please check the file and try again.'));
     reader.readAsArrayBuffer(file);
   });
 };
@@ -51,19 +60,27 @@ const parseCsv = (file: File): Promise<ParsedFile> => {
       header: true,
       skipEmptyLines: true,
       complete: (results: any) => {
+        if (results.errors && results.errors.length > 0) {
+          const firstError = results.errors[0];
+          // Adding 2 to row index: 1 for 0-based index, 1 for header row.
+          return reject(new Error(`CSV parsing error: ${firstError.message} (at row ${firstError.row + 2})`));
+        }
+
         const data = results.data;
+        const headers = results.meta.fields || [];
+
         if (data.length === 0) {
             resolve({
               name: file.name,
               size: file.size,
-              headers: [],
+              headers: headers,
               data: [],
               rowCount: 0,
-              columnCount: 0,
+              columnCount: headers.length,
             });
             return;
         }
-        const headers = results.meta.fields;
+
         resolve({
           name: file.name,
           size: file.size,
@@ -74,7 +91,7 @@ const parseCsv = (file: File): Promise<ParsedFile> => {
         });
       },
       error: (error: Error) => {
-        reject(new Error('Failed to parse CSV file: ' + error.message));
+        reject(new Error('Failed to read CSV file. Please check the file and try again.'));
       },
     });
   });
