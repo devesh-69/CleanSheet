@@ -197,7 +197,6 @@ const FindReplaceTool: React.FC = () => {
                         description={<>We've processed <span className="font-bold text-gray-200">{file.name}</span> and applied your find/replace rules. Preview the changes below.</>}
                         headers={file.headers}
                         tabs={[{ title: 'Processed Data', data: processedData, badgeType: 'success' }]}
-                        downloadableData={processedData}
                         fileForExportName={file.name}
                         onRestart={handleRestart} 
                     />;

@@ -15,7 +15,6 @@ interface ResultsDisplayProps {
   description: React.ReactNode;
   headers: string[];
   tabs: ResultTab[];
-  downloadableData: Record<string, any>[] | null;
   fileForExportName: string;
   onRestart: () => void;
   restartButtonText?: string;
@@ -32,7 +31,7 @@ const Badge: React.FC<{ type: ResultTab['badgeType'], count: number }> = ({ type
 }
 
 export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ 
-    title, description, headers, tabs, downloadableData, fileForExportName, onRestart, restartButtonText = "Start Over" 
+    title, description, headers, tabs, fileForExportName, onRestart, restartButtonText = "Start Over" 
 }) => {
   const [activeTabIndex, setActiveTabIndex] = useState(0);
 
@@ -44,13 +43,18 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   const paginatedData = activeTabData.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
   const handleDownload = (format: 'xlsx' | 'csv') => {
-    if (!downloadableData) return;
+    const dataToExport = tabs[activeTabIndex]?.data;
+    if (!dataToExport || dataToExport.length === 0) return;
+
     const originalName = fileForExportName.split('.')[0];
-    const fileName = `${originalName}_processed.${format}`;
-    exportFile(downloadableData, fileName, format);
+    const activeTabTitle = tabs[activeTabIndex]?.title.replace(/\s+/g, '_') || 'data';
+    const fileName = `${originalName}_${activeTabTitle}.${format}`;
+
+    exportFile(dataToExport, fileName, format);
   };
 
   const showTabs = tabs.length > 0;
+  const canDownload = activeTabData.length > 0;
 
   return (
     <Card className="w-full max-w-6xl mx-auto animate-slide-in">
@@ -84,13 +88,13 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                     </nav>
                 </div>
             )}
-            {downloadableData && (
+            {showTabs && (
                 <div className={`flex space-x-2 ${!showTabs ? 'w-full justify-end' : ''}`}>
-                <Button variant="secondary" onClick={() => handleDownload('csv')} disabled={downloadableData.length === 0}>
+                <Button variant="secondary" onClick={() => handleDownload('csv')} disabled={!canDownload}>
                     <DownloadIcon className="w-4 h-4 mr-2"/>
                     Download CSV
                 </Button>
-                <Button onClick={() => handleDownload('xlsx')} disabled={downloadableData.length === 0}>
+                <Button onClick={() => handleDownload('xlsx')} disabled={!canDownload}>
                     <DownloadIcon className="w-4 h-4 mr-2"/>
                     Download XLSX
                 </Button>

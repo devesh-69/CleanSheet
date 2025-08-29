@@ -105,7 +105,6 @@ const MergeFilesTool: React.FC = () => {
                         description={<>We've successfully merged <span className="font-bold text-gray-200">{files.length}</span> files into a single dataset. You can preview the result below.</>}
                         headers={result.mergedHeaders}
                         tabs={[{ title: 'Merged Data', data: result.mergedData, badgeType: 'success' }]}
-                        downloadableData={result.mergedData}
                         fileForExportName="merged_files"
                         onRestart={handleRestart}
                     />;

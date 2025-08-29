@@ -105,20 +105,21 @@ const CompareFilesTool: React.FC = () => {
           const totalCommon = commonRows.length;
 
           let description;
-          if (totalUnique === 0) {
+          if (totalUnique === 0 && totalCommon > 0) {
               description = <>All <span className="font-bold text-blue-400">{totalCommon}</span> rows in <span className="font-bold text-gray-200">{comparisonFile.name}</span> were found in the base file. No unique rows detected.</>;
-          } else if (totalCommon === 0) {
+          } else if (totalCommon === 0 && totalUnique > 0) {
               description = <>Success! All <span className="font-bold text-green-400">{totalUnique}</span> rows in <span className="font-bold text-gray-200">{comparisonFile.name}</span> are unique.</>;
-          } else {
+          } else if (totalCommon === 0 && totalUnique === 0) {
+              description = <>The source file <span className="font-bold text-gray-200">{comparisonFile.name}</span> is empty.</>;
+          }
+          else {
               description = <>Processed <span className="font-bold text-gray-200">{comparisonFile.name}</span>: found <span className="font-bold text-green-400">{totalUnique} unique rows</span> and <span className="font-bold text-blue-400">{totalCommon} common rows</span>.</>;
           }
 
           const tabs = [];
-          if (totalUnique > 0) {
+          if (totalUnique > 0 || totalCommon > 0) {
             tabs.push({ title: 'Unique Rows', data: uniqueRows, badgeType: 'success' as const });
-          }
-          if (totalCommon > 0) {
-             tabs.push({ title: 'Common Rows', data: commonRows, badgeType: 'default' as const });
+            tabs.push({ title: 'Common Rows', data: commonRows, badgeType: 'default' as const });
           }
           
           return (
@@ -127,7 +128,6 @@ const CompareFilesTool: React.FC = () => {
               description={description}
               headers={comparisonFile.headers}
               tabs={tabs}
-              downloadableData={uniqueRows}
               fileForExportName={comparisonFile.name}
               onRestart={handleRestart}
               restartButtonText="Start New Comparison"

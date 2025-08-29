@@ -154,7 +154,6 @@ const CompareColumnsTool: React.FC = () => {
                         description={<>Found <span className="font-bold text-red-400">{result.totalMismatches}</span> mismatched rows out of {result.totalRowsProcessed} checked.</>}
                         headers={file.headers}
                         tabs={[{ title: 'Mismatched Rows', data: result.mismatches, badgeType: 'danger' }]}
-                        downloadableData={result.mismatches}
                         fileForExportName="column_mismatches"
                         onRestart={handleRestart}
                     />;

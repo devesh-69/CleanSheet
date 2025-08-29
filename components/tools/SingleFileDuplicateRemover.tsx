@@ -87,7 +87,6 @@ const SingleFileDuplicateRemover: React.FC = () => {
                             }
                             headers={file.headers}
                             tabs={tabs}
-                            downloadableData={results.cleanedData}
                             fileForExportName={file.name}
                             onRestart={handleRestart}
                         />

@@ -180,7 +180,6 @@ const QuickSummaryTool: React.FC = () => {
                         description={<>Generated a summary from <span className="font-bold text-gray-200">{file.name}</span>. Preview the report below.</>}
                         headers={result.summaryHeaders}
                         tabs={[{ title: 'Summary Data', data: result.summaryData, badgeType: 'default' }]}
-                        downloadableData={result.summaryData}
                         fileForExportName="summary_report"
                         onRestart={handleRestart}
                     />;

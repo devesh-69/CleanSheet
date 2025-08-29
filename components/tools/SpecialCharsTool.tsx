@@ -158,7 +158,6 @@ const SpecialCharsTool: React.FC = () => {
                         description={<>We've processed <span className="font-bold text-gray-200">{file.name}</span> and applied your cleaning rules. You can preview the changes below and download the result.</>}
                         headers={file.headers}
                         tabs={[{ title: 'Processed Data', data: processedData, badgeType: 'success' }]}
-                        downloadableData={processedData}
                         fileForExportName={file.name}
                         onRestart={handleRestart}
                     />;
