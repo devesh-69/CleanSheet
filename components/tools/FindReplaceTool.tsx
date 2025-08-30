@@ -128,7 +128,7 @@ const OptionsSelector: React.FC<{
             </CardContent>
             <CardFooter className="flex justify-between">
                 <Button variant="secondary" onClick={onBack}>Back</Button>
-                <Button onClick={() => onProcess(options)} disabled={isProcessDisabled}>Process File</Button>
+                <Button onClick={() => onProcess(options)} disabled={isProcessDisabled}>Apply Rules & Preview</Button>
             </CardFooter>
         </Card>
     );
@@ -137,21 +137,23 @@ const OptionsSelector: React.FC<{
 const FindReplaceTool: React.FC = () => {
     const [step, setStep] = useState<AppStep>(AppStep.UPLOAD);
     const [file, setFile] = useState<ParsedFile | null>(null);
-    const [processedData, setProcessedData] = useState<Record<string, any>[] | null>(null);
+    const [dataHistory, setDataHistory] = useState<Record<string, any>[][]>([]);
 
     const handleFileUpload = (uploadedFile: ParsedFile | null, uploadError: string | null) => {
         if (uploadedFile) {
             setFile(uploadedFile);
+            setDataHistory([uploadedFile.data]);
             setStep(AppStep.PREVIEW);
         }
     };
 
     const handleProcess = (options: FindReplaceOptions) => {
-        if (file) {
+        const currentData = dataHistory[dataHistory.length - 1];
+        if (file && currentData) {
             setStep(AppStep.PROCESSING);
             setTimeout(() => {
-                const cleanedData = findAndReplace(file.data, options);
-                setProcessedData(cleanedData);
+                const cleanedData = findAndReplace(currentData, options);
+                setDataHistory(prev => [...prev, cleanedData]);
                 setStep(AppStep.RESULTS);
             }, 500);
         }
@@ -160,10 +162,17 @@ const FindReplaceTool: React.FC = () => {
     const handleRestart = () => {
         setStep(AppStep.UPLOAD);
         setFile(null);
-        setProcessedData(null);
+        setDataHistory([]);
+    };
+
+    const handleUndo = () => {
+        setDataHistory(prev => prev.slice(0, -1));
+        setStep(AppStep.RESULTS);
     };
 
     const renderContent = () => {
+        const processedData = dataHistory[dataHistory.length - 1];
+
         switch (step) {
             case AppStep.UPLOAD:
                 return (
@@ -181,7 +190,7 @@ const FindReplaceTool: React.FC = () => {
                 return null;
             case AppStep.SELECT_COLUMNS:
                 if (file) {
-                    return <OptionsSelector file={file} onProcess={handleProcess} onBack={() => setStep(AppStep.PREVIEW)} />;
+                    return <OptionsSelector file={file} onProcess={handleProcess} onBack={() => setStep(AppStep.RESULTS)} />;
                 }
                 return null;
             case AppStep.PROCESSING:
@@ -190,11 +199,18 @@ const FindReplaceTool: React.FC = () => {
                 if (processedData && file) {
                     return <ResultsDisplay 
                         title="Your Modified File is Ready"
-                        description={<>We've processed <span className="font-bold text-gray-200">{file.name}</span> and applied your find/replace rules. Preview the changes below.</>}
+                        description={
+                             <>
+                                We've processed <span className="font-bold text-gray-200">{file.name}</span>. You can apply more find/replace rules or download the result.
+                                <Button variant="secondary" onClick={() => setStep(AppStep.SELECT_COLUMNS)} className="ml-4 h-8 px-4">Apply More Rules</Button>
+                            </>
+                        }
                         headers={file.headers}
                         tabs={[{ title: 'Processed Data', data: processedData, badgeType: 'success' }]}
                         fileForExportName={file.name}
-                        onRestart={handleRestart} 
+                        onRestart={handleRestart}
+                        onUndo={handleUndo}
+                        canUndo={dataHistory.length > 1}
                     />;
                 }
                 return null;

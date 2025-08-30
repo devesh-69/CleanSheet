@@ -18,6 +18,8 @@ interface ResultsDisplayProps {
   fileForExportName: string;
   onRestart: () => void;
   restartButtonText?: string;
+  onUndo?: () => void;
+  canUndo?: boolean;
 }
 
 const Badge: React.FC<{ type: ResultTab['badgeType'], count: number }> = ({ type, count }) => {
@@ -31,7 +33,8 @@ const Badge: React.FC<{ type: ResultTab['badgeType'], count: number }> = ({ type
 }
 
 export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ 
-    title, description, headers, tabs, fileForExportName, onRestart, restartButtonText = "Start Over" 
+    title, description, headers, tabs, fileForExportName, onRestart, restartButtonText = "Start Over",
+    onUndo, canUndo
 }) => {
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [isZipping, setIsZipping] = useState(false);
@@ -179,7 +182,12 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
         )}
 
       </CardContent>
-      <CardFooter className="flex justify-end">
+      <CardFooter className="flex justify-between">
+        <div>
+            {onUndo && (
+                <Button variant="secondary" onClick={onUndo} disabled={!canUndo}>Undo Last Operation</Button>
+            )}
+        </div>
         <Button onClick={onRestart}>{restartButtonText}</Button>
       </CardFooter>
     </Card>
