@@ -2,7 +2,7 @@ import React from 'react';
 import { Tool } from '../types';
 import {
   LayoutGridIcon, CopyIcon, SparklesIcon, ReplaceIcon,
-  CombineIcon, ColumnsIcon, PieChartIcon, CheckSquareIcon, FileTextIcon, BarChartIcon
+  CombineIcon, ColumnsIcon, PieChartIcon, CheckSquareIcon, FileTextIcon, BarChartIcon, BookOpenIcon
 } from './ui/Icons';
 import { Logo } from './ui/Logo';
 
@@ -66,6 +66,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTool, setActiveTool }) =
             <NavLink icon={<CheckSquareIcon className="w-5 h-5" />} label="Data Validation" tool={Tool.DATA_VALIDATION} activeTool={activeTool} onClick={setActiveTool} />
             <NavLink icon={<FileTextIcon className="w-5 h-5" />} label="Export Duplicates" tool={Tool.EXPORT_DUPLICATES} activeTool={activeTool} onClick={setActiveTool} />
             <NavLink icon={<BarChartIcon className="w-5 h-5" />} label="Interactive Dashboard" tool={Tool.DASHBOARD_BUILDER} activeTool={activeTool} onClick={setActiveTool} />
+            <NavLink icon={<BookOpenIcon className="w-5 h-5" />} label="Data Storytelling" tool={Tool.DATA_STORYTELLING} activeTool={activeTool} onClick={setActiveTool} />
           </nav>
         </div>
       </div>

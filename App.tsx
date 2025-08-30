@@ -11,6 +11,7 @@ import QuickSummaryTool from './components/tools/QuickSummaryTool';
 import DataValidationTool from './components/tools/DataValidationTool';
 import ExportDuplicatesTool from './components/tools/ExportDuplicatesTool';
 import DashboardTool from './components/tools/DashboardTool';
+import DataStorytellingTool from './components/tools/DataStorytellingTool';
 
 
 const App: React.FC = () => {
@@ -38,6 +39,8 @@ const App: React.FC = () => {
         return <ExportDuplicatesTool />;
       case Tool.DASHBOARD_BUILDER:
         return <DashboardTool />;
+      case Tool.DATA_STORYTELLING:
+        return <DataStorytellingTool />;
       default:
         return <CompareFilesTool />;
     }

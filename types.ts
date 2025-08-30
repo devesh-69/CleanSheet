@@ -50,6 +50,7 @@ export enum Tool {
   DATA_VALIDATION = 'DATA_VALIDATION',
   EXPORT_DUPLICATES = 'EXPORT_DUPLICATES',
   DASHBOARD_BUILDER = 'DASHBOARD_BUILDER',
+  DATA_STORYTELLING = 'DATA_STORYTELLING',
 }
 
 export type SpecialCharsOptions = {
@@ -154,4 +155,27 @@ export type ChartConfig = {
     xAxisColumn: string;
     yAxisColumn: string;
     aggregation: AggregationType;
+};
+
+// --- Data Storytelling Types ---
+export type StoryChart = {
+    type: 'bar' | 'pie' | 'line';
+    data: {
+        labels: string[];
+        datasets: {
+            label: string;
+            data: number[];
+        }[];
+    };
+};
+
+export type StorySection = {
+    title: string;
+    insight: string;
+    chart: StoryChart;
+};
+
+export type DataStory = {
+    executiveSummary: string;
+    sections: StorySection[];
 };
