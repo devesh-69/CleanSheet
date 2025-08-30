@@ -5,6 +5,7 @@ import { ToolHeader } from '../ToolHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { SpinnerIcon, UploadCloudIcon, XCircleIcon, DownloadIcon, SparklesIcon } from '../ui/Icons';
+import { Accordion } from '../ui/Accordion';
 
 declare const Chart: any;
 declare const jsPDF: any;
@@ -352,33 +353,47 @@ const DashboardTool: React.FC = () => {
                 <div className="lg:col-span-4 xl:col-span-3">
                     <Card className="sticky top-6">
                         <CardHeader><CardTitle>Controls</CardTitle></CardHeader>
-                        <CardContent className="space-y-4 max-h-[80vh] overflow-y-auto">
-                            <div>
-                                <label className="text-sm font-medium text-gray-300">Sheet</label>
+                        <CardContent className="p-4 max-h-[80vh] overflow-y-auto">
+                             <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-300 block">Sheet</label>
                                 <select value={activeSheetName} onChange={e => setActiveSheetName(e.target.value)} className="w-full p-2 mt-1 border rounded-md bg-transparent border-white/20 text-white">
                                     {workbook.sheets.map(s => <option key={s.sheetName} value={s.sheetName}>{s.sheetName}</option>)}
                                 </select>
                             </div>
-                            <div className="space-y-3">
-                                <h4 className="font-semibold text-gray-200">Filters</h4>
-                                {filters.map(f => (
-                                    <div key={f.id} className="p-3 bg-white/5 rounded-lg space-y-2">
-                                        <div className="flex justify-between items-center"><select value={f.column} onChange={e => updateFilter(f.id, 'column', e.target.value)} className="w-full p-2 border rounded-md bg-transparent border-white/20 text-white">{activeSheet?.headers.map(h => <option key={h} value={h}>{h}</option>)}</select><button onClick={() => removeFilter(f.id)} className="ml-2 text-gray-400 hover:text-red-400"><XCircleIcon className="w-5 h-5"/></button></div>
-                                        <div className="flex gap-2"><select value={f.operator} onChange={e => updateFilter(f.id, 'operator', e.target.value)} className="w-1/2 p-2 border rounded-md bg-transparent border-white/20 text-white"><option value="equals">Equals</option><option value="not_equals">Not Equals</option><option value="contains">Contains</option><option value="not_contains">Not Contains</option><option value="starts_with">Starts With</option><option value="ends_with">Ends With</option><option value=">">&gt;</option><option value="<">&lt;</option><option value=">=">&gt;=</option><option value="<=">&lt;=</option></select><input type="text" value={f.value} onChange={e => updateFilter(f.id, 'value', e.target.value)} placeholder="Value" className="w-1/2 p-2 border rounded-md bg-transparent border-white/20 text-white"/></div>
+
+                            <div className="mt-4 border-t border-white/10">
+                                <Accordion title="Visualization" defaultOpen>
+                                    <div className="space-y-2">
+                                        <div><label className="text-xs text-gray-400">Chart Type</label><select value={chartConfig.type} onChange={e => handleChartConfigChange('type', e.target.value)} className="w-full p-2 mt-1 border rounded-md bg-transparent border-white/20 text-white"><option value="bar">Bar</option><option value="line">Line</option><option value="pie">Pie</option><option value="scatter">Scatter</option></select></div>
+                                        {chartConfig.type !== 'scatter' && <div><label className="text-xs text-gray-400">Aggregation</label><select value={chartConfig.aggregation} onChange={e => handleChartConfigChange('aggregation', e.target.value)} className="w-full p-2 mt-1 border rounded-md bg-transparent border-white/20 text-white"><option value="count">Count</option><option value="sum">Sum</option><option value="average">Average</option></select></div>}
+                                        <div><label className="text-xs text-gray-400">{chartConfig.type === 'scatter' ? 'X-Axis (Numerical)' : 'X-Axis (Category)'}</label><select value={chartConfig.xAxisColumn} onChange={e => handleChartConfigChange('xAxisColumn', e.target.value)} className="w-full p-2 mt-1 border rounded-md bg-transparent border-white/20 text-white">{(chartConfig.type === 'scatter' ? numericalColumns : categoricalColumns).map(h => <option key={h} value={h}>{h}</option>)}</select></div>
+                                        <div><label className="text-xs text-gray-400">Y-Axis (Value)</label><select value={chartConfig.yAxisColumn} onChange={e => handleChartConfigChange('yAxisColumn', e.target.value)} className="w-full p-2 mt-1 border rounded-md bg-transparent border-white/20 text-white">{numericalColumns.map(h => <option key={h} value={h}>{h}</option>)}</select></div>
                                     </div>
-                                ))}
-                                <Button variant="secondary" onClick={addFilter}>Add Filter</Button>
-                            </div>
-                            <div className="space-y-2">
-                                <h4 className="font-semibold text-gray-200">Sort</h4>
-                                <div className="flex gap-2"><select value={sort?.column || ''} onChange={e => setSort(s => ({...s, column: e.target.value, direction: s?.direction || 'asc'}))} className="w-2/3 p-2 border rounded-md bg-transparent border-white/20 text-white"><option value="">-- No Sort --</option>{activeSheet?.headers.map(h => <option key={h} value={h}>{h}</option>)}</select><select value={sort?.direction || 'asc'} onChange={e => setSort(s => ({...s, direction: e.target.value as 'asc' | 'desc', column: s?.column || ''}))} disabled={!sort?.column} className="w-1/3 p-2 border rounded-md bg-transparent border-white/20 text-white"><option value="asc">Asc</option><option value="desc">Desc</option></select></div>
-                            </div>
-                            <div className="space-y-2">
-                                <h4 className="font-semibold text-gray-200">Visualization</h4>
-                                <div><label className="text-xs text-gray-400">Chart Type</label><select value={chartConfig.type} onChange={e => handleChartConfigChange('type', e.target.value)} className="w-full p-2 mt-1 border rounded-md bg-transparent border-white/20 text-white"><option value="bar">Bar</option><option value="line">Line</option><option value="pie">Pie</option><option value="scatter">Scatter</option></select></div>
-                                {chartConfig.type !== 'scatter' && <div><label className="text-xs text-gray-400">Aggregation</label><select value={chartConfig.aggregation} onChange={e => handleChartConfigChange('aggregation', e.target.value)} className="w-full p-2 mt-1 border rounded-md bg-transparent border-white/20 text-white"><option value="count">Count</option><option value="sum">Sum</option><option value="average">Average</option></select></div>}
-                                <div><label className="text-xs text-gray-400">{chartConfig.type === 'scatter' ? 'X-Axis (Numerical)' : 'X-Axis (Category)'}</label><select value={chartConfig.xAxisColumn} onChange={e => handleChartConfigChange('xAxisColumn', e.target.value)} className="w-full p-2 mt-1 border rounded-md bg-transparent border-white/20 text-white">{(chartConfig.type === 'scatter' ? numericalColumns : categoricalColumns).map(h => <option key={h} value={h}>{h}</option>)}</select></div>
-                                <div><label className="text-xs text-gray-400">Y-Axis (Value)</label><select value={chartConfig.yAxisColumn} onChange={e => handleChartConfigChange('yAxisColumn', e.target.value)} className="w-full p-2 mt-1 border rounded-md bg-transparent border-white/20 text-white">{numericalColumns.map(h => <option key={h} value={h}>{h}</option>)}</select></div>
+                                </Accordion>
+
+                                <Accordion title={
+                                    <div className="flex items-center">
+                                        <span>Filters</span>
+                                        {filters.length > 0 && <span className="ml-2 bg-blue-500/30 text-blue-300 text-xs font-medium px-2 py-0.5 rounded-full">{filters.length}</span>}
+                                    </div>
+                                }>
+                                    <div className="space-y-3">
+                                        {filters.map(f => (
+                                            <div key={f.id} className="p-3 bg-white/5 rounded-lg space-y-2">
+                                                <div className="flex justify-between items-center"><select value={f.column} onChange={e => updateFilter(f.id, 'column', e.target.value)} className="w-full p-2 border rounded-md bg-transparent border-white/20 text-white">{activeSheet?.headers.map(h => <option key={h} value={h}>{h}</option>)}</select><button onClick={() => removeFilter(f.id)} className="ml-2 text-gray-400 hover:text-red-400"><XCircleIcon className="w-5 h-5"/></button></div>
+                                                <div className="flex gap-2"><select value={f.operator} onChange={e => updateFilter(f.id, 'operator', e.target.value)} className="w-1/2 p-2 border rounded-md bg-transparent border-white/20 text-white"><option value="equals">Equals</option><option value="not_equals">Not Equals</option><option value="contains">Contains</option><option value="not_contains">Not Contains</option><option value="starts_with">Starts With</option><option value="ends_with">Ends With</option><option value=">">&gt;</option><option value="<">&lt;</option><option value=">=">&gt;=</option><option value="<=">&lt;=</option></select><input type="text" value={f.value} onChange={e => updateFilter(f.id, 'value', e.target.value)} placeholder="Value" className="w-1/2 p-2 border rounded-md bg-transparent border-white/20 text-white"/></div>
+                                            </div>
+                                        ))}
+                                        <Button variant="secondary" onClick={addFilter} className="w-full">Add Filter</Button>
+                                    </div>
+                                </Accordion>
+
+                                <Accordion title="Sort">
+                                    <div className="flex gap-2">
+                                        <select value={sort?.column || ''} onChange={e => setSort(s => ({...s, column: e.target.value, direction: s?.direction || 'asc'}))} className="w-2/3 p-2 border rounded-md bg-transparent border-white/20 text-white"><option value="">-- No Sort --</option>{activeSheet?.headers.map(h => <option key={h} value={h}>{h}</option>)}</select>
+                                        <select value={sort?.direction || 'asc'} onChange={e => setSort(s => ({...s, direction: e.target.value as 'asc' | 'desc', column: s?.column || ''}))} disabled={!sort?.column} className="w-1/3 p-2 border rounded-md bg-transparent border-white/20 text-white"><option value="asc">Asc</option><option value="desc">Desc</option></select>
+                                    </div>
+                                </Accordion>
                             </div>
                         </CardContent>
                     </Card>
