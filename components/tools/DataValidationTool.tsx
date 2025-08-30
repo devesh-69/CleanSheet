@@ -70,13 +70,13 @@ const OptionsSelector: React.FC<{
                             <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
                                 <div className="md:col-span-5">
                                     <label className="text-xs text-gray-400">Column</label>
-                                    <select value={rule.column} onChange={e => updateRule(rule.id, 'column', e.target.value)} className="w-full p-2 border rounded-md bg-transparent border-white/20 text-white">
+                                    <select value={rule.column} onChange={e => updateRule(rule.id, 'column', e.target.value)} className="w-full p-2 border rounded-md bg-slate-900 border-white/20 text-white">
                                         {file.headers.map(h => <option key={h} value={h}>{h}</option>)}
                                     </select>
                                 </div>
                                 <div className="md:col-span-6">
                                     <label className="text-xs text-gray-400">Rule</label>
-                                    <select value={rule.type} onChange={e => updateRule(rule.id, 'type', e.target.value)} className="w-full p-2 border rounded-md bg-transparent border-white/20 text-white">
+                                    <select value={rule.type} onChange={e => updateRule(rule.id, 'type', e.target.value)} className="w-full p-2 border rounded-md bg-slate-900 border-white/20 text-white">
                                         {RULE_DEFINITIONS.map(def => <option key={def.type} value={def.type}>{def.label}</option>)}
                                     </select>
                                 </div>
@@ -90,18 +90,18 @@ const OptionsSelector: React.FC<{
                                 <div className="grid grid-cols-2 gap-3 pl-1">
                                     <div>
                                         <label className="text-xs text-gray-400">Min Length</label>
-                                        <input type="number" value={rule.min} onChange={e => updateRule(rule.id, 'min', parseInt(e.target.value, 10))} className="w-full p-2 border rounded-md bg-transparent border-white/20 text-white" />
+                                        <input type="number" value={rule.min} onChange={e => updateRule(rule.id, 'min', parseInt(e.target.value, 10))} className="w-full p-2 border rounded-md bg-slate-900 border-white/20 text-white" />
                                     </div>
                                     <div>
                                         <label className="text-xs text-gray-400">Max Length</label>
-                                        <input type="number" value={rule.max} onChange={e => updateRule(rule.id, 'max', parseInt(e.target.value, 10))} className="w-full p-2 border rounded-md bg-transparent border-white/20 text-white" />
+                                        <input type="number" value={rule.max} onChange={e => updateRule(rule.id, 'max', parseInt(e.target.value, 10))} className="w-full p-2 border rounded-md bg-slate-900 border-white/20 text-white" />
                                     </div>
                                 </div>
                             )}
                             {definition?.requiresInput === 'regex' && (
                                  <div className="pl-1">
                                     <label className="text-xs text-gray-400">Regex Pattern</label>
-                                    <input type="text" placeholder="e.g., ^[A-Z]{2}$" value={rule.regex} onChange={e => updateRule(rule.id, 'regex', e.target.value)} className="w-full p-2 border rounded-md bg-transparent border-white/20 text-white font-mono" />
+                                    <input type="text" placeholder="e.g., ^[A-Z]{2}$" value={rule.regex} onChange={e => updateRule(rule.id, 'regex', e.target.value)} className="w-full p-2 border rounded-md bg-slate-900 border-white/20 text-white font-mono" />
                                 </div>
                             )}
                         </div>

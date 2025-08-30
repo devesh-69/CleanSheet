@@ -42,7 +42,7 @@ const OptionsSelector: React.FC<{
                             id="column-a"
                             value={columnA}
                             onChange={(e) => setColumnA(e.target.value)}
-                            className="w-full p-2 border rounded-md bg-transparent border-white/20 text-white"
+                            className="w-full p-2 border rounded-md bg-slate-900 border-white/20 text-white"
                         >
                             {file.headers.map(h => <option key={h} value={h}>{h}</option>)}
                         </select>
@@ -53,7 +53,7 @@ const OptionsSelector: React.FC<{
                             id="column-b"
                             value={columnB}
                             onChange={(e) => setColumnB(e.target.value)}
-                            className="w-full p-2 border rounded-md bg-transparent border-white/20 text-white"
+                            className="w-full p-2 border rounded-md bg-slate-900 border-white/20 text-white"
                         >
                              {file.headers.map(h => <option key={h} value={h}>{h}</option>)}
                         </select>

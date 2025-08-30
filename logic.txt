@@ -1,0 +1,127 @@
+# Duplisheets Feature Logic Documentation
+
+This document outlines the core logic and algorithms used for each feature within the Duplisheets application.
+
+---
+
+## 1. Core Services
+
+### 1.1. File Parsing (`services/fileProcessor.ts`)
+- **Objective:** To parse `.xlsx`, `.xls`, and `.csv` files into a standardized JSON format (`ParsedFile` type).
+- **Excel Logic:**
+  - Uses the `SheetJS (xlsx)` library.
+  - The file is read as an `ArrayBuffer`.
+  - `XLSX.read` parses the buffer into a workbook object.
+  - The first sheet in the workbook is identified and converted to an array of JSON objects using `XLSX.utils.sheet_to_json`.
+  - It handles edge cases like empty sheets or sheets with only a header row.
+- **CSV Logic:**
+  - Uses the `PapaParse` library.
+  - The file is parsed with the `header: true` option, which automatically uses the first row as keys for the resulting JSON objects.
+  - `skipEmptyLines: true` ensures empty rows are ignored.
+  - Robust error handling is included to report specific CSV parsing errors.
+- **Workbook Parsing (for Dashboard):**
+  - A separate `processWorkbook` function parses *all* sheets within an Excel file, returning an array of `ParsedSheet` objects, which is necessary for the multi-sheet dashboard functionality.
+
+### 1.2. Data Exporting (`services/fileProcessor.ts`)
+- **Objective:** To convert JSON data back into downloadable `.xlsx` or `.csv` files.
+- **Excel Logic:**
+  - Uses `SheetJS`. `XLSX.utils.json_to_sheet` converts the data array to a worksheet.
+  - A new workbook is created, the sheet is appended, and `XLSX.writeFile` triggers the browser download.
+- **CSV Logic:**
+  - A custom `manualUnparse` function is used to avoid external dependencies.
+  - It creates a header row by joining all column keys.
+  - It iterates through each data row, mapping values to a string and ensuring proper CSV escaping (handling commas, quotes, and newlines within fields).
+  - A Byte Order Mark (BOM) `\uFEFF` is prepended to the final string to ensure proper UTF-8 handling in Excel.
+  - The final string is converted to a `Blob` and downloaded via a temporary anchor link.
+
+---
+
+## 2. Tool-Specific Logic
+
+### 2.1. Single File Duplicate Remover (`services/duplicateDetector.ts`)
+- **Function:** `findDuplicatesInSingleFile`
+- **Logic:**
+  1.  A `compositeKey` is generated for each row. This key is a string created by concatenating the values of the user-selected columns.
+  2.  Before concatenation, each value is normalized based on user-selected options (e.g., converted to lowercase, trimmed of whitespace, stripped of special characters).
+  3.  A JavaScript `Set` (`seenKeys`) is used for efficient tracking of unique composite keys.
+  4.  The function iterates through the data:
+      - If a row's composite key is already in the `Set`, the row is added to the `duplicates` array.
+      - If the key is not in the `Set`, it's the first time seeing this combination. The row is added to the `cleanedData` array, and its key is added to the `Set`.
+  5.  Returns the `duplicates` and `cleanedData` arrays.
+
+### 2.2. Find Unique Rows (Compare Files) (`services/duplicateDetector.ts`)
+- **Function:** `findUniqueAndCommonRows`
+- **Logic:**
+  1.  It first creates a `Set` of composite keys from every row in the `mainFile` (the base file). This `Set` serves as a high-performance lookup table.
+  2.  It then iterates through each row of the `comparisonFile`.
+  3.  For each row, it generates a normalized composite key using the same logic as the duplicate remover.
+  4.  It checks if this key exists in the `mainFile`'s key `Set`.
+      - If the key **exists**, the row is considered a "common row" and is added to the `commonRows` array.
+      - If the key **does not exist**, the row is unique to the `comparisonFile` and is added to the `uniqueRows` array.
+  5.  Returns the `uniqueRows` and `commonRows`.
+
+### 2.3. Special Characters Remover (`services/dataCleaner.ts`)
+- **Function:** `removeSpecialChars`
+- **Logic:**
+  - It iterates through each row and applies transformations only to the user-selected columns.
+  - **Filter Mode (Exclusive):** If a filter mode (e.g., `alphanumeric`) is active, it uses a regex to remove any characters that *do not* match the desired set. This mode overrides all other options.
+  - **Removal Mode (Additive):** If no filter is set, it sequentially applies regex replacements for predefined character sets (punctuation, math symbols, currency, emojis) and any user-provided custom characters.
+
+### 2.4. Find & Replace (`services/dataCleaner.ts`)
+- **Function:** `findAndReplace`
+- **Logic:**
+  - Iterates through each selected column of each row.
+  - For each cell, it applies every user-defined find/replace operation in sequence.
+  - **Match Entire Cell:** If this option is enabled, it performs a direct string equality check. If the cell content matches the `find` term, the entire cell is replaced.
+  - **Partial Match:** If `matchEntireCell` is disabled, it uses a regular expression to replace all occurrences of the `find` term within the cell. The `find` term is escaped to prevent unintended regex behavior. Case sensitivity is handled by adding the `i` flag to the regex.
+
+### 2.5. Merge Multiple Files (`services/dataCleaner.ts`)
+- **Function:** `mergeFiles`
+- **Logic:**
+  1.  It first determines the complete set of headers by creating a union of all headers from all input files.
+  2.  Optionally, it adds a "Source File" column header.
+  3.  It iterates through each file and each row. For every row, it creates a new object that contains all possible headers (initialized with a default empty value).
+  4.  It then populates this new object with the data from the current row, ensuring that all final rows have a consistent structure.
+
+### 2.6. Compare Columns (`services/dataCleaner.ts`)
+- **Function:** `compareColumns`
+- **Logic:**
+  - Iterates through each row of the dataset.
+  - For each row, it extracts the values from the two user-selected columns (`columnA` and `columnB`).
+  - It normalizes both values based on comparison options (case, whitespace, etc.).
+  - If the two normalized values are not identical, the original (unmodified) row is added to a `mismatches` array.
+
+### 2.7. Quick Summary Report (`services/dataCleaner.ts`)
+- **Function:** `generateSummaryReport`
+- **Logic:**
+  1.  **Grouping:** It uses a `Map` to group the data. It iterates through all rows and generates a composite key from the values in the user-selected "Group By" columns. The map's keys are these composite keys, and the values are arrays of rows belonging to that group.
+  2.  **Aggregation:** It then iterates through each group in the map. For each group, it calculates the user-defined aggregations (`count`, `sum`, `average`, `min`, `max`, `count_unique`).
+  3.  For numeric functions (`sum`, `average`, etc.), it first filters the data to ensure only valid numbers are included in the calculation.
+  4.  The final result is an array of objects, where each object represents a group and its calculated values.
+
+### 2.8. Data Validation (`services/dataValidator.ts`)
+- **Function:** `validateData`
+- **Logic:**
+  1.  It maintains a dictionary of validator functions, each corresponding to a specific rule type (e.g., a regex for `is_email`, `Number.isInteger` for `is_integer`).
+  2.  **Uniqueness Optimization:** For the `is_unique` rule, it performs a pre-pass over the data to find all non-unique values in the selected column. This is much more performant than checking for duplicates during the main iteration.
+  3.  It iterates through each row and checks the relevant columns against the user-defined rules.
+  4.  If a rule is violated, the original row is appended to an `invalidRows` array with additional metadata about the error (which column failed, the error message, and the original row number).
+
+### 2.9. Export Duplicates Report (`services/duplicateDetector.ts`)
+- **Function:** `generateDuplicateReport`
+- **Logic:**
+  1.  Similar to the Quick Summary tool, it first groups all rows using a `Map` based on a composite key from selected columns.
+  2.  It then filters these groups, keeping only those with more than one row (i.e., the duplicates).
+  3.  For each duplicate group, it iterates through the rows and adds them to the final report.
+  4.  It adds two special columns to the report: `Duplicate Group ID` (a unique identifier for each group of duplicates) and `Is Original` (which marks the first row encountered in each group).
+
+### 2.10. Interactive Dashboard (`components/tools/DashboardTool.tsx`)
+- **Logic:** This tool's logic is primarily based on reactive data processing using React's `useMemo` hooks.
+  1.  **Data Pipeline:** A chain of memoized calculations is created:
+      - `activeSheet` data is the source.
+      - `filteredData` is derived by applying user filters to the source.
+      - `sortedData` is derived by sorting `filteredData`.
+      - `paginatedData` slices `sortedData` for table display.
+  2.  **Aggregation for Charts:** The core visualization logic is in the `aggregatedData` memo. It takes the final `sortedData`, groups it by the selected X-axis, and applies an aggregation function (count, sum, average) to the Y-axis values for each group. For scatter plots, it skips aggregation.
+  3.  **Chart Rendering:** A `useEffect` hook monitors `aggregatedData`. When the data changes, it destroys the previous `Chart.js` instance and renders a new one with the updated data and configuration.
+  4.  **Key Insights:** A `useMemo` hook analyzes the `aggregatedData` to generate simple textual summaries, such as identifying the category with the highest value or calculating the total sum.

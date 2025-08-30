@@ -98,7 +98,7 @@ const OptionsSelector: React.FC<{
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                             {allColumns.map(col => (
                                 <div key={col} className="flex items-center">
-                                    <input type="checkbox" id={`group-${col}`} checked={groupingColumns.includes(col)} onChange={() => handleGroupingToggle(col)} className="h-4 w-4 rounded border-gray-500 text-blue-500 bg-transparent focus:ring-blue-500" />
+                                    <input type="checkbox" id={`group-${col}`} checked={groupingColumns.includes(col)} onChange={() => handleGroupingToggle(col)} className="h-4 w-4 rounded border-gray-500 text-blue-500 bg-slate-900 focus:ring-blue-500" />
                                     <label htmlFor={`group-${col}`} className="ml-3 block text-sm text-gray-300 truncate" title={col}>{col}</label>
                                 </div>
                             ))}
@@ -115,13 +115,13 @@ const OptionsSelector: React.FC<{
                                 <div key={agg.id} className="grid grid-cols-12 gap-3 items-center p-3 bg-white/5 rounded-lg">
                                     <div className="col-span-12 md:col-span-5">
                                         <label className="text-xs text-gray-400">Column</label>
-                                        <select value={agg.column} onChange={e => updateAggregation(agg.id, 'column', e.target.value)} className="w-full p-2 border rounded-md bg-transparent border-white/20 text-white">
+                                        <select value={agg.column} onChange={e => updateAggregation(agg.id, 'column', e.target.value)} className="w-full p-2 border rounded-md bg-slate-900 border-white/20 text-white">
                                             {allColumns.map(h => <option key={h} value={h}>{h}</option>)}
                                         </select>
                                     </div>
                                     <div className="col-span-10 md:col-span-6">
                                         <label className="text-xs text-gray-400">Calculation</label>
-                                        <select value={agg.function} onChange={e => updateAggregation(agg.id, 'function', e.target.value)} className="w-full p-2 border rounded-md bg-transparent border-white/20 text-white">
+                                        <select value={agg.function} onChange={e => updateAggregation(agg.id, 'function', e.target.value)} className="w-full p-2 border rounded-md bg-slate-900 border-white/20 text-white">
                                             {allFunctions.map(f => (
                                                 <option key={f.id} value={f.id} disabled={!isNumeric && f.id !== 'count' && f.id !== 'count_unique'}>
                                                     {f.label}

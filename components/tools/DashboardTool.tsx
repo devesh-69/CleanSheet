@@ -191,7 +191,7 @@ const DashboardTool: React.FC = () => {
 
         return Object.entries(groups).map(([key, values]) => {
             let aggregatedValue = 0;
-            const numericValues = values.map(v => parseFloat(String(v))).filter(v => !isNaN(v));
+            const numericValues = values.map(v => parseFloat(String(v))).filter(v => !isNaN(v) && isFinite(v));
 
             switch (chartConfig.aggregation) {
                 case 'count':
@@ -209,16 +209,29 @@ const DashboardTool: React.FC = () => {
     }, [sortedData, chartConfig]);
     
     const keyInsights = useMemo(() => {
-        if (aggregatedData.length < 2) return [];
+        // Insights are not generated for scatter plots (which use 'none' aggregation) or if there's no data.
+        if (chartConfig.aggregation === 'none' || aggregatedData.length === 0) {
+            return [];
+        }
+
         const insights = [];
-        const top5 = aggregatedData.slice(0, 5);
-        insights.push(`Top category is '${top5[0].x}' with a value of ${top5[0].y.toLocaleString()}.`);
-        if(chartConfig.aggregation === 'average') {
-             const totalAvg = aggregatedData.reduce((acc, item) => acc + item.y, 0) / aggregatedData.length;
-             insights.push(`The overall average value across categories is ${totalAvg.toLocaleString(undefined, {maximumFractionDigits: 2})}.`);
-        } else if (chartConfig.aggregation === 'sum') {
-            const totalSum = aggregatedData.reduce((acc, item) => acc + item.y, 0);
-            insights.push(`The total sum across all categories is ${totalSum.toLocaleString()}.`);
+        const topItem = aggregatedData[0];
+
+        // The top item provides the first insight.
+        // We ensure `y` is a number before formatting, although our aggregation logic should guarantee this.
+        if (topItem && typeof topItem.y === 'number') {
+            insights.push(`Top category is '${topItem.x}' with a value of ${topItem.y.toLocaleString()}.`);
+        }
+        
+        // Further insights like averages or totals make more sense with more than one data point.
+        if (aggregatedData.length > 1) {
+            if(chartConfig.aggregation === 'average') {
+                const totalAvg = aggregatedData.reduce((acc, item) => acc + item.y, 0) / aggregatedData.length;
+                insights.push(`The overall average value across categories is ${totalAvg.toLocaleString(undefined, {maximumFractionDigits: 2})}.`);
+            } else if (chartConfig.aggregation === 'sum') {
+                const totalSum = aggregatedData.reduce((acc, item) => acc + item.y, 0);
+                insights.push(`The total sum across all categories is ${totalSum.toLocaleString()}.`);
+            }
         }
         return insights;
     }, [aggregatedData, chartConfig.aggregation]);
@@ -356,7 +369,7 @@ const DashboardTool: React.FC = () => {
                         <CardContent className="p-4 max-h-[80vh] overflow-y-auto">
                              <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-300 block">Sheet</label>
-                                <select value={activeSheetName} onChange={e => setActiveSheetName(e.target.value)} className="w-full p-2 mt-1 border rounded-md bg-transparent border-white/20 text-white">
+                                <select value={activeSheetName} onChange={e => setActiveSheetName(e.target.value)} className="w-full p-2 mt-1 border rounded-md bg-slate-900 border-white/20 text-white">
                                     {workbook.sheets.map(s => <option key={s.sheetName} value={s.sheetName}>{s.sheetName}</option>)}
                                 </select>
                             </div>
@@ -364,10 +377,10 @@ const DashboardTool: React.FC = () => {
                             <div className="mt-4 border-t border-white/10">
                                 <Accordion title="Visualization" defaultOpen>
                                     <div className="space-y-2">
-                                        <div><label className="text-xs text-gray-400">Chart Type</label><select value={chartConfig.type} onChange={e => handleChartConfigChange('type', e.target.value)} className="w-full p-2 mt-1 border rounded-md bg-transparent border-white/20 text-white"><option value="bar">Bar</option><option value="line">Line</option><option value="pie">Pie</option><option value="scatter">Scatter</option></select></div>
-                                        {chartConfig.type !== 'scatter' && <div><label className="text-xs text-gray-400">Aggregation</label><select value={chartConfig.aggregation} onChange={e => handleChartConfigChange('aggregation', e.target.value)} className="w-full p-2 mt-1 border rounded-md bg-transparent border-white/20 text-white"><option value="count">Count</option><option value="sum">Sum</option><option value="average">Average</option></select></div>}
-                                        <div><label className="text-xs text-gray-400">{chartConfig.type === 'scatter' ? 'X-Axis (Numerical)' : 'X-Axis (Category)'}</label><select value={chartConfig.xAxisColumn} onChange={e => handleChartConfigChange('xAxisColumn', e.target.value)} className="w-full p-2 mt-1 border rounded-md bg-transparent border-white/20 text-white">{(chartConfig.type === 'scatter' ? numericalColumns : categoricalColumns).map(h => <option key={h} value={h}>{h}</option>)}</select></div>
-                                        <div><label className="text-xs text-gray-400">Y-Axis (Value)</label><select value={chartConfig.yAxisColumn} onChange={e => handleChartConfigChange('yAxisColumn', e.target.value)} className="w-full p-2 mt-1 border rounded-md bg-transparent border-white/20 text-white">{numericalColumns.map(h => <option key={h} value={h}>{h}</option>)}</select></div>
+                                        <div><label className="text-xs text-gray-400">Chart Type</label><select value={chartConfig.type} onChange={e => handleChartConfigChange('type', e.target.value)} className="w-full p-2 mt-1 border rounded-md bg-slate-900 border-white/20 text-white"><option value="bar">Bar</option><option value="line">Line</option><option value="pie">Pie</option><option value="scatter">Scatter</option></select></div>
+                                        {chartConfig.type !== 'scatter' && <div><label className="text-xs text-gray-400">Aggregation</label><select value={chartConfig.aggregation} onChange={e => handleChartConfigChange('aggregation', e.target.value)} className="w-full p-2 mt-1 border rounded-md bg-slate-900 border-white/20 text-white"><option value="count">Count</option><option value="sum">Sum</option><option value="average">Average</option></select></div>}
+                                        <div><label className="text-xs text-gray-400">{chartConfig.type === 'scatter' ? 'X-Axis (Numerical)' : 'X-Axis (Category)'}</label><select value={chartConfig.xAxisColumn} onChange={e => handleChartConfigChange('xAxisColumn', e.target.value)} className="w-full p-2 mt-1 border rounded-md bg-slate-900 border-white/20 text-white">{(chartConfig.type === 'scatter' ? numericalColumns : categoricalColumns).map(h => <option key={h} value={h}>{h}</option>)}</select></div>
+                                        <div><label className="text-xs text-gray-400">Y-Axis (Value)</label><select value={chartConfig.yAxisColumn} onChange={e => handleChartConfigChange('yAxisColumn', e.target.value)} className="w-full p-2 mt-1 border rounded-md bg-slate-900 border-white/20 text-white">{numericalColumns.map(h => <option key={h} value={h}>{h}</option>)}</select></div>
                                     </div>
                                 </Accordion>
 
@@ -380,8 +393,8 @@ const DashboardTool: React.FC = () => {
                                     <div className="space-y-3">
                                         {filters.map(f => (
                                             <div key={f.id} className="p-3 bg-white/5 rounded-lg space-y-2">
-                                                <div className="flex justify-between items-center"><select value={f.column} onChange={e => updateFilter(f.id, 'column', e.target.value)} className="w-full p-2 border rounded-md bg-transparent border-white/20 text-white">{activeSheet?.headers.map(h => <option key={h} value={h}>{h}</option>)}</select><button onClick={() => removeFilter(f.id)} className="ml-2 text-gray-400 hover:text-red-400"><XCircleIcon className="w-5 h-5"/></button></div>
-                                                <div className="flex gap-2"><select value={f.operator} onChange={e => updateFilter(f.id, 'operator', e.target.value)} className="w-1/2 p-2 border rounded-md bg-transparent border-white/20 text-white"><option value="equals">Equals</option><option value="not_equals">Not Equals</option><option value="contains">Contains</option><option value="not_contains">Not Contains</option><option value="starts_with">Starts With</option><option value="ends_with">Ends With</option><option value=">">&gt;</option><option value="<">&lt;</option><option value=">=">&gt;=</option><option value="<=">&lt;=</option></select><input type="text" value={f.value} onChange={e => updateFilter(f.id, 'value', e.target.value)} placeholder="Value" className="w-1/2 p-2 border rounded-md bg-transparent border-white/20 text-white"/></div>
+                                                <div className="flex justify-between items-center"><select value={f.column} onChange={e => updateFilter(f.id, 'column', e.target.value)} className="w-full p-2 border rounded-md bg-slate-900 border-white/20 text-white">{activeSheet?.headers.map(h => <option key={h} value={h}>{h}</option>)}</select><button onClick={() => removeFilter(f.id)} className="ml-2 text-gray-400 hover:text-red-400"><XCircleIcon className="w-5 h-5"/></button></div>
+                                                <div className="flex gap-2"><select value={f.operator} onChange={e => updateFilter(f.id, 'operator', e.target.value)} className="w-1/2 p-2 border rounded-md bg-slate-900 border-white/20 text-white"><option value="equals">Equals</option><option value="not_equals">Not Equals</option><option value="contains">Contains</option><option value="not_contains">Not Contains</option><option value="starts_with">Starts With</option><option value="ends_with">Ends With</option><option value=">">&gt;</option><option value="<">&lt;</option><option value=">=">&gt;=</option><option value="<=">&lt;=</option></select><input type="text" value={f.value} onChange={e => updateFilter(f.id, 'value', e.target.value)} placeholder="Value" className="w-1/2 p-2 border rounded-md bg-slate-900 border-white/20 text-white"/></div>
                                             </div>
                                         ))}
                                         <Button variant="secondary" onClick={addFilter} className="w-full">Add Filter</Button>
@@ -390,8 +403,8 @@ const DashboardTool: React.FC = () => {
 
                                 <Accordion title="Sort">
                                     <div className="flex gap-2">
-                                        <select value={sort?.column || ''} onChange={e => setSort(s => ({...s, column: e.target.value, direction: s?.direction || 'asc'}))} className="w-2/3 p-2 border rounded-md bg-transparent border-white/20 text-white"><option value="">-- No Sort --</option>{activeSheet?.headers.map(h => <option key={h} value={h}>{h}</option>)}</select>
-                                        <select value={sort?.direction || 'asc'} onChange={e => setSort(s => ({...s, direction: e.target.value as 'asc' | 'desc', column: s?.column || ''}))} disabled={!sort?.column} className="w-1/3 p-2 border rounded-md bg-transparent border-white/20 text-white"><option value="asc">Asc</option><option value="desc">Desc</option></select>
+                                        <select value={sort?.column || ''} onChange={e => setSort(s => ({...s, column: e.target.value, direction: s?.direction || 'asc'}))} className="w-2/3 p-2 border rounded-md bg-slate-900 border-white/20 text-white"><option value="">-- No Sort --</option>{activeSheet?.headers.map(h => <option key={h} value={h}>{h}</option>)}</select>
+                                        <select value={sort?.direction || 'asc'} onChange={e => setSort(s => ({...s, direction: e.target.value as 'asc' | 'desc', column: s?.column || ''}))} disabled={!sort?.column} className="w-1/3 p-2 border rounded-md bg-slate-900 border-white/20 text-white"><option value="asc">Asc</option><option value="desc">Desc</option></select>
                                     </div>
                                 </Accordion>
                             </div>
