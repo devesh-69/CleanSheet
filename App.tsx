@@ -10,6 +10,7 @@ import CompareColumnsTool from './components/tools/CompareColumnsTool';
 import QuickSummaryTool from './components/tools/QuickSummaryTool';
 import DataValidationTool from './components/tools/DataValidationTool';
 import ExportDuplicatesTool from './components/tools/ExportDuplicatesTool';
+import DashboardTool from './components/tools/DashboardTool';
 
 
 const App: React.FC = () => {
@@ -35,6 +36,8 @@ const App: React.FC = () => {
         return <DataValidationTool />;
       case Tool.EXPORT_DUPLICATES:
         return <ExportDuplicatesTool />;
+      case Tool.DASHBOARD_BUILDER:
+        return <DashboardTool />;
       default:
         return <CompareFilesTool />;
     }

@@ -7,6 +7,18 @@ export type ParsedFile = {
   columnCount: number;
 };
 
+export type ParsedSheet = {
+    sheetName: string;
+    headers: string[];
+    data: Record<string, any>[];
+};
+
+export type ParsedWorkbook = {
+    fileName: string;
+    size: number;
+    sheets: ParsedSheet[];
+};
+
 export type ComparisonOptions = {
   caseSensitive: boolean;
   trimWhitespace: boolean;
@@ -37,6 +49,7 @@ export enum Tool {
   QUICK_SUMMARY = 'QUICK_SUMMARY',
   DATA_VALIDATION = 'DATA_VALIDATION',
   EXPORT_DUPLICATES = 'EXPORT_DUPLICATES',
+  DASHBOARD_BUILDER = 'DASHBOARD_BUILDER',
 }
 
 export type SpecialCharsOptions = {
@@ -116,4 +129,27 @@ export type DuplicateReportResult = {
     totalDuplicateRows: number;
     totalDuplicateGroups: number;
     totalRowsProcessed: number;
+};
+
+// --- Dashboard Types ---
+export type FilterOperator = 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'starts_with' | 'ends_with' | '>' | '<' | '>=' | '<=';
+
+export type DashboardFilter = {
+    id: number;
+    column: string;
+    operator: FilterOperator;
+    value: string;
+};
+
+export type DashboardSort = {
+    column: string;
+    direction: 'asc' | 'desc';
+};
+
+export type ChartType = 'bar' | 'line' | 'pie';
+
+export type ChartConfig = {
+    type: ChartType;
+    xAxisColumn: string;
+    yAxisColumn: string;
 };

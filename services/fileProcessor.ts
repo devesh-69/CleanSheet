@@ -1,5 +1,5 @@
 
-import { ParsedFile } from '../types';
+import { ParsedFile, ParsedWorkbook, ParsedSheet } from '../types';
 
 declare const XLSX: any;
 declare const Papa: any;
@@ -106,6 +106,50 @@ export const processFile = (file: File): Promise<ParsedFile> => {
   } else {
     return Promise.reject(new Error('Unsupported file format. Please upload .xlsx, .xls, or .csv'));
   }
+};
+
+export const processWorkbook = (file: File): Promise<ParsedWorkbook> => {
+    return new Promise((resolve, reject) => {
+        const extension = file.name.split('.').pop()?.toLowerCase();
+        if (extension !== 'xlsx' && extension !== 'xls') {
+            return reject(new Error('Unsupported file format for dashboards. Please upload an Excel (.xlsx, .xls) file.'));
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = e.target?.result;
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheets: ParsedSheet[] = workbook.SheetNames.map(sheetName => {
+                    const worksheet = workbook.Sheets[sheetName];
+                    const jsonData: Record<string, any>[] = XLSX.utils.sheet_to_json(worksheet);
+                    
+                    if (jsonData.length === 0) {
+                        const headerRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                        const headers = (headerRows[0] as string[]) || [];
+                        return { sheetName, headers, data: [] };
+                    }
+                    
+                    const headers = Object.keys(jsonData[0] || {});
+                    return { sheetName, headers, data: jsonData };
+                });
+
+                if (sheets.length === 0) {
+                    return reject(new Error('The Excel file contains no sheets.'));
+                }
+
+                resolve({
+                    fileName: file.name,
+                    size: file.size,
+                    sheets,
+                });
+            } catch (error) {
+                reject(new Error('Failed to parse Excel file. It may be corrupt or in an unsupported format.'));
+            }
+        };
+        reader.onerror = () => reject(new Error('Error reading file content.'));
+        reader.readAsArrayBuffer(file);
+    });
 };
 
 /**
