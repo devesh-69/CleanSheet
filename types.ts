@@ -146,10 +146,12 @@ export type DashboardSort = {
     direction: 'asc' | 'desc';
 };
 
-export type ChartType = 'bar' | 'line' | 'pie';
+export type ChartType = 'bar' | 'line' | 'pie' | 'scatter';
+export type AggregationType = 'count' | 'sum' | 'average' | 'none';
 
 export type ChartConfig = {
     type: ChartType;
     xAxisColumn: string;
     yAxisColumn: string;
+    aggregation: AggregationType;
 };
