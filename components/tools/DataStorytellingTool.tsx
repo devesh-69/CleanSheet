@@ -9,7 +9,7 @@ import { Button } from '../ui/Button';
 import { DownloadIcon } from '../ui/Icons';
 
 declare const Chart: any;
-declare const jsPDF: any;
+declare const jspdf: any;
 
 const CHART_COLORS = [
     'rgba(59, 130, 246, 0.7)', 'rgba(139, 92, 246, 0.7)', 'rgba(16, 185, 129, 0.7)', 
@@ -97,7 +97,7 @@ const DataStorytellingTool: React.FC = () => {
     const handleExportPdf = () => {
         if (!reportRef.current || !story) return;
 
-        const doc = new jsPDF.jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
+        const doc = new jspdf.jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
         const content = reportRef.current;
         const margin = 40;
         const pageHeight = doc.internal.pageSize.getHeight();

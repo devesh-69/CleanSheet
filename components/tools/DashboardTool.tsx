@@ -7,7 +7,7 @@ import { Button } from '../ui/Button';
 import { SpinnerIcon, UploadCloudIcon, XCircleIcon, DownloadIcon, SparklesIcon } from '../ui/Icons';
 
 declare const Chart: any;
-declare const jsPDF: any;
+declare const jspdf: any;
 declare const XLSX: any;
 
 const CHART_COLORS = [
@@ -314,7 +314,7 @@ const DashboardTool: React.FC = () => {
                 XLSX.writeFile(wb, `${fileName}.${format}`, { bookType: format as 'xlsx' | 'xlsm' });
 
             } else if (format === 'pdf') {
-                const doc = new jsPDF.jsPDF({ orientation: 'landscape' });
+                const doc = new jspdf.jsPDF({ orientation: 'landscape' });
                 doc.text(`Dashboard for: ${workbook.fileName} - ${activeSheetName}`, 14, 16);
                 if (chartCanvasRef.current) doc.addImage(chartCanvasRef.current.toDataURL('image/png', 1.0), 'PNG', 14, 24, 270, 100);
                 doc.addPage();
