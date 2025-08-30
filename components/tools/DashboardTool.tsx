@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { ParsedWorkbook, ParsedSheet, DashboardFilter, FilterOperator, DashboardSort, ChartConfig, ChartType, AggregationType, DataType } from '../../types';
 import { processWorkbook } from '../../services/fileProcessor';
@@ -264,16 +265,40 @@ const DashboardTool: React.FC = () => {
             data: chartData,
             options: {
                 responsive: true, maintainAspectRatio: false,
+                onClick: (event: MouseEvent) => {
+                    const chart = chartInstanceRef.current;
+                    if (!chart) return;
+
+                    const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, true);
+
+                    if (points.length) {
+                        const firstPoint = points[0];
+                        const label = chart.data.labels[firstPoint.index];
+                        const columnToFilter = chartConfig.xAxisColumn;
+
+                        if (label && columnToFilter && chartConfig.type !== 'scatter') {
+                            const filterExists = filters.some(f => f.column === columnToFilter && f.operator === 'equals' && String(f.value) === String(label));
+                            if (!filterExists) {
+                                setFilters(prev => [...prev, {
+                                    id: Date.now(),
+                                    column: columnToFilter,
+                                    operator: 'equals',
+                                    value: String(label),
+                                }]);
+                            }
+                        }
+                    }
+                },
                 plugins: { legend: { labels: { color: '#d1d5db' } } },
                 scales: chartConfig.type !== 'pie' ? {
                     x: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.1)' } },
                     y: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.1)' } }
-                } : undefined
+                } : undefined,
             }
         });
         
         return () => { if (chartInstanceRef.current) chartInstanceRef.current.destroy(); };
-    }, [aggregatedData, chartConfig]);
+    }, [aggregatedData, chartConfig, filters]);
 
 
     const addFilter = () => setFilters(f => [...f, { id: Date.now(), column: activeSheet?.headers[0] || '', operator: 'equals', value: '' }]);
@@ -415,7 +440,7 @@ const DashboardTool: React.FC = () => {
                             {keyInsights.length > 0 && (
                                 <div className="mt-4 p-4 bg-white/5 rounded-lg border border-white/10">
                                     <h4 className="font-semibold text-gray-200 flex items-center mb-2"><SparklesIcon className="w-5 h-5 mr-2 text-yellow-400"/> Key Insights</h4>
-                                    <ul className="list-disc list-inside text-sm text-gray-300 space-y-1">{keyInsights.map((insight, i) => <li key={i}>{insight}</li></ul>
+                                    <ul className="list-disc list-inside text-sm text-gray-300 space-y-1">{keyInsights.map((insight, i) => <li key={i}>{insight}</li>)}</ul>
                                 </div>
                             )}
                         </CardContent>
