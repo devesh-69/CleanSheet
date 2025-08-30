@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Tool } from './types';
@@ -11,6 +12,7 @@ import QuickSummaryTool from './components/tools/QuickSummaryTool';
 import DataValidationTool from './components/tools/DataValidationTool';
 import ExportDuplicatesTool from './components/tools/ExportDuplicatesTool';
 import DashboardTool from './components/tools/DashboardTool';
+// FIX: Import the new DataStorytellingTool component to integrate it into the application.
 import DataStorytellingTool from './components/tools/DataStorytellingTool';
 
 
@@ -30,6 +32,7 @@ const App: React.FC = () => {
     [Tool.DATA_VALIDATION]: <DataValidationTool />,
     [Tool.EXPORT_DUPLICATES]: <ExportDuplicatesTool />,
     [Tool.DASHBOARD_BUILDER]: <DashboardTool />,
+    // FIX: Add the DataStorytellingTool to the map of available tools.
     [Tool.DATA_STORYTELLING]: <DataStorytellingTool />,
   };
 

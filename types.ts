@@ -1,3 +1,4 @@
+
 export type ParsedFile = {
   name: string;
   size: number;
@@ -50,6 +51,7 @@ export enum Tool {
   DATA_VALIDATION = 'DATA_VALIDATION',
   EXPORT_DUPLICATES = 'EXPORT_DUPLICATES',
   DASHBOARD_BUILDER = 'DASHBOARD_BUILDER',
+  // FIX: Add the new Data Storytelling tool to the enum.
   DATA_STORYTELLING = 'DATA_STORYTELLING',
 }
 
@@ -157,25 +159,26 @@ export type ChartConfig = {
     aggregation: AggregationType;
 };
 
+// FIX: Define the types for the Data Storytelling feature to resolve compilation errors.
 // --- Data Storytelling Types ---
-export type StoryChart = {
-    type: 'bar' | 'pie' | 'line';
-    data: {
-        labels: string[];
-        datasets: {
-            label: string;
-            data: number[];
-        }[];
-    };
+export type DataStoryChart = {
+  type: 'bar' | 'pie' | 'line';
+  data: {
+    labels: string[];
+    datasets: {
+      label: string;
+      data: number[];
+    }[];
+  };
 };
 
-export type StorySection = {
-    title: string;
-    insight: string;
-    chart: StoryChart;
+export type DataStorySection = {
+  title: string;
+  insight: string;
+  chart: DataStoryChart;
 };
 
 export type DataStory = {
-    executiveSummary: string;
-    sections: StorySection[];
+  executiveSummary: string;
+  sections: DataStorySection[];
 };

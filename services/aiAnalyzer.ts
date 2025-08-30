@@ -1,4 +1,6 @@
-import { GoogleGenAI, Type } from "https://esm.sh/@google/generative-ai";
+
+// FIX: Update import to use the official '@google/genai' package instead of a CDN URL.
+import { GoogleGenAI, Type } from "@google/genai";
 import { ParsedFile, DataStory } from '../types';
 
 // Ensure the environment variable is handled correctly
