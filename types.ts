@@ -69,10 +69,15 @@ export type ColumnComparisonResult = {
     totalRowsProcessed: number;
 };
 
-export type SummaryFunction = 'count' | 'sum' | 'average' | 'min' | 'max';
+export type SummaryFunction = 'count' | 'count_unique' | 'sum' | 'average' | 'min' | 'max';
+
+export type Aggregation = {
+  id: number; // For React keys
+  column: string;
+  function: SummaryFunction;
+};
 
 export type SummaryOptions = {
-    groupingColumn: string;
-    aggregationColumn: string;
-    functions: SummaryFunction[];
+    groupingColumns: string[];
+    aggregations: Aggregation[];
 };

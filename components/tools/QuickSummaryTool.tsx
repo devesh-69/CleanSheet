@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ParsedFile, AppStep, SummaryOptions, SummaryFunction } from '../../types';
+import { ParsedFile, AppStep, SummaryOptions, SummaryFunction, Aggregation } from '../../types';
 import { FileUploader } from '../FileUploader';
 import { ResultsDisplay } from '../ResultsDisplay';
 import { generateSummaryReport } from '../../services/dataCleaner';
@@ -7,21 +7,32 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '../ui/Button';
 import { ToolHeader } from '../ToolHeader';
 import { ProcessingIndicator } from '../ProcessingIndicator';
+import { XCircleIcon } from '../ui/Icons';
 
-// A simple heuristic to find columns that likely contain numbers
+// A more robust heuristic to find columns that likely contain numbers
 const getNumericColumns = (file: ParsedFile): string[] => {
     if (file.data.length === 0) return [];
-    const sampleSize = Math.min(10, file.data.length); // Check up to 10 rows
+    // Use a larger sample for more accuracy
+    const sampleSize = Math.min(50, file.data.length); 
     const sampleRows = file.data.slice(0, sampleSize);
+    if (sampleSize === 0) return [];
 
     return file.headers.filter(header => {
-        return sampleRows.every(row => {
+        let numericCount = 0;
+        let nonNullCount = 0;
+        for (const row of sampleRows) {
             const value = row[header];
-            // Treat empty/null as potentially numeric (could be sparse data)
-            if (value === null || value === '' || value === undefined) return true;
-            // Check if it's a number or a string that can be parsed to a finite number
-            return !isNaN(parseFloat(String(value))) && isFinite(Number(value));
-        });
+            if (value !== null && value !== '' && value !== undefined) {
+                nonNullCount++;
+                if (!isNaN(parseFloat(String(value))) && isFinite(Number(value))) {
+                    numericCount++;
+                }
+            }
+        }
+        // If the column has very few non-null values in the sample, don't classify it.
+        if (nonNullCount < Math.min(5, sampleSize * 0.1)) return false;
+        // Classify as numeric if > 80% of non-null values are numbers
+        return (numericCount / nonNullCount) > 0.8;
     });
 };
 
@@ -32,85 +43,110 @@ const OptionsSelector: React.FC<{
     onBack: () => void
 }> = ({ file, onProcess, onBack }) => {
     const numericColumns = useMemo(() => getNumericColumns(file), [file]);
+    const allColumns = file.headers;
+    const allFunctions: { id: SummaryFunction, label: string }[] = [
+        { id: 'count', label: 'Count' },
+        { id: 'count_unique', label: 'Count Unique' },
+        { id: 'sum', label: 'Sum' },
+        { id: 'average', label: 'Average' },
+        { id: 'min', label: 'Min' },
+        { id: 'max', label: 'Max' },
+    ];
+    
+    // Initial state setup
+    const [groupingColumns, setGroupingColumns] = useState<string[]>([allColumns[0] || '']);
+    const [aggregations, setAggregations] = useState<Aggregation[]>([
+        { id: Date.now(), column: numericColumns[0] || allColumns[1] || allColumns[0], function: 'sum' }
+    ]);
 
-    const [options, setOptions] = useState<SummaryOptions>({
-        groupingColumn: file.headers[0] || '',
-        aggregationColumn: numericColumns[0] || '',
-        functions: ['count', 'sum'],
-    });
-
-    const handleFunctionToggle = (func: SummaryFunction) => {
-        setOptions(prev => ({
-            ...prev,
-            functions: prev.functions.includes(func)
-                ? prev.functions.filter(f => f !== func)
-                : [...prev.functions, func]
-        }));
+    const handleGroupingToggle = (column: string) => {
+        setGroupingColumns(prev => 
+            prev.includes(column) ? prev.filter(c => c !== column) : [...prev, column]
+        );
     };
 
-    const isProcessDisabled = !options.groupingColumn || !options.aggregationColumn || options.functions.length === 0;
+    const addAggregation = () => {
+        setAggregations(prev => [...prev, {
+            id: Date.now(),
+            column: numericColumns[0] || allColumns[0],
+            function: 'sum'
+        }]);
+    };
 
-    const allFunctions: SummaryFunction[] = ['count', 'sum', 'average', 'min', 'max'];
-    
+    const removeAggregation = (id: number) => {
+        setAggregations(prev => prev.filter(agg => agg.id !== id));
+    };
+
+    const updateAggregation = (id: number, field: 'column' | 'function', value: string) => {
+        setAggregations(prev => prev.map(agg => 
+            agg.id === id ? { ...agg, [field]: value } : agg
+        ));
+    };
+
+    const isProcessDisabled = groupingColumns.length === 0 || aggregations.length === 0;
+
     return (
-        <Card className="w-full max-w-3xl mx-auto animate-slide-in">
+        <Card className="w-full max-w-4xl mx-auto animate-slide-in">
             <CardHeader>
                 <CardTitle>Configure Summary Report</CardTitle>
-                <CardDescription>Select columns for grouping and calculation to generate your report.</CardDescription>
+                <CardDescription>Select columns for grouping and add calculations to generate your report.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                     <div>
-                        <label htmlFor="grouping-col" className="block text-sm font-medium text-gray-300 mb-1">Group By (Rows)</label>
-                        <select
-                            id="grouping-col"
-                            value={options.groupingColumn}
-                            onChange={(e) => setOptions(o => ({...o, groupingColumn: e.target.value}))}
-                            className="w-full p-2 border rounded-md bg-transparent border-white/20 text-white"
-                        >
-                            {file.headers.map(h => <option key={h} value={h}>{h}</option>)}
-                        </select>
-                         <p className="text-xs text-gray-400 mt-1">Select the column to create groups from.</p>
-                    </div>
-                     <div>
-                        <label htmlFor="agg-col" className="block text-sm font-medium text-gray-300 mb-1">Calculate On (Values)</label>
-                        <select
-                            id="agg-col"
-                            value={options.aggregationColumn}
-                            onChange={(e) => setOptions(o => ({...o, aggregationColumn: e.target.value}))}
-                            className="w-full p-2 border rounded-md bg-transparent border-white/20 text-white"
-                        >
-                             {numericColumns.length > 0 ? (
-                                numericColumns.map(h => <option key={h} value={h}>{h}</option>)
-                            ) : (
-                                <option disabled>No numeric columns found</option>
-                            )}
-                        </select>
-                         <p className="text-xs text-gray-400 mt-1">Select the numeric column for calculations.</p>
+                <div>
+                    <h4 className="text-lg font-semibold mb-3 text-gray-200">Group By (Rows)</h4>
+                    <div className="border border-white/10 rounded-lg p-4 max-h-60 overflow-y-auto">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            {allColumns.map(col => (
+                                <div key={col} className="flex items-center">
+                                    <input type="checkbox" id={`group-${col}`} checked={groupingColumns.includes(col)} onChange={() => handleGroupingToggle(col)} className="h-4 w-4 rounded border-gray-500 text-blue-500 bg-transparent focus:ring-blue-500" />
+                                    <label htmlFor={`group-${col}`} className="ml-3 block text-sm text-gray-300 truncate" title={col}>{col}</label>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
-                 <div>
-                    <h4 className="text-lg font-semibold mb-3 text-gray-200">Calculations</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                         {allFunctions.map(func => (
-                            <div key={func} className="flex items-center p-3 bg-white/5 rounded-lg">
-                                <input
-                                    type="checkbox"
-                                    id={`func-${func}`}
-                                    checked={options.functions.includes(func)}
-                                    onChange={() => handleFunctionToggle(func)}
-                                    className="h-4 w-4 rounded border-gray-500 text-blue-500 bg-transparent focus:ring-blue-500"
-                                />
-                                <label htmlFor={`func-${func}`} className="ml-3 block text-sm text-gray-300 capitalize">{func}</label>
-                            </div>
-                        ))}
+                <div>
+                    <h4 className="text-lg font-semibold mb-3 text-gray-200">Summarize Values</h4>
+                    <div className="space-y-3">
+                        {aggregations.map((agg) => {
+                            const isNumeric = numericColumns.includes(agg.column);
+                            return (
+                                <div key={agg.id} className="grid grid-cols-12 gap-3 items-center p-3 bg-white/5 rounded-lg">
+                                    <div className="col-span-12 md:col-span-5">
+                                        <label className="text-xs text-gray-400">Column</label>
+                                        <select value={agg.column} onChange={e => updateAggregation(agg.id, 'column', e.target.value)} className="w-full p-2 border rounded-md bg-transparent border-white/20 text-white">
+                                            {allColumns.map(h => <option key={h} value={h}>{h}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="col-span-10 md:col-span-6">
+                                        <label className="text-xs text-gray-400">Calculation</label>
+                                        <select value={agg.function} onChange={e => updateAggregation(agg.id, 'function', e.target.value)} className="w-full p-2 border rounded-md bg-transparent border-white/20 text-white">
+                                            {allFunctions.map(f => (
+                                                <option key={f.id} value={f.id} disabled={!isNumeric && f.id !== 'count' && f.id !== 'count_unique'}>
+                                                    {f.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="col-span-2 md:col-span-1 flex justify-end items-end h-full">
+                                        {aggregations.length > 1 && (
+                                            <button onClick={() => removeAggregation(agg.id)} className="text-gray-400 hover:text-red-400 p-2">
+                                                <XCircleIcon className="w-5 h-5" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
+                    <Button variant="secondary" onClick={addAggregation} className="mt-4">Add Calculation</Button>
                 </div>
+
             </CardContent>
             <CardFooter className="flex justify-between">
                 <Button variant="secondary" onClick={onBack}>Back</Button>
-                <Button onClick={() => onProcess(options)} disabled={isProcessDisabled}>Generate Report</Button>
+                <Button onClick={() => onProcess({ groupingColumns, aggregations })} disabled={isProcessDisabled}>Generate Report</Button>
             </CardFooter>
         </Card>
     );

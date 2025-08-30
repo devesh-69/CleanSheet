@@ -1,4 +1,4 @@
-import { SpecialCharsOptions, FindReplaceOptions, ParsedFile, ComparisonOptions, ColumnComparisonResult, SummaryOptions, SummaryFunction } from '../types';
+import { SpecialCharsOptions, FindReplaceOptions, ParsedFile, ComparisonOptions, ColumnComparisonResult, SummaryOptions, SummaryFunction, Aggregation } from '../types';
 
 const REGEX_SETS = {
     // Common punctuation characters
@@ -197,60 +197,87 @@ export const generateSummaryReport = (
     data: Record<string, any>[],
     options: SummaryOptions
 ): { summaryData: Record<string, any>[], summaryHeaders: string[] } => {
-    if (!options.groupingColumn || !options.aggregationColumn || options.functions.length === 0) {
+    if (options.groupingColumns.length === 0 || options.aggregations.length === 0) {
         return { summaryData: [], summaryHeaders: [] };
     }
 
-    const groupedData: Record<string, number[]> = {};
+    const groupedData: Map<string, Record<string, any>[]> = new Map();
 
-    // Group the data
+    // Group the data by a composite key from all grouping columns
     for (const row of data) {
-        const groupKey = String(row[options.groupingColumn] ?? 'N/A');
-        const value = parseFloat(row[options.aggregationColumn]);
-
-        if (!isNaN(value)) {
-            if (!groupedData[groupKey]) {
-                groupedData[groupKey] = [];
-            }
-            groupedData[groupKey].push(value);
+        const groupKey = options.groupingColumns.map(col => row[col] ?? 'N/A').join('||');
+        
+        if (!groupedData.has(groupKey)) {
+            groupedData.set(groupKey, []);
         }
+        groupedData.get(groupKey)!.push(row);
     }
 
     const summaryData: Record<string, any>[] = [];
     
-    const summaryHeaders = [options.groupingColumn, ...options.functions.map(f => `${f.charAt(0).toUpperCase() + f.slice(1)} (${options.aggregationColumn})`)];
-     if (options.functions.includes('count')) {
-        const index = summaryHeaders.findIndex(h => h.startsWith('Count'));
-        if (index > -1) summaryHeaders[index] = 'Count';
-    }
+    // Dynamically create headers
+    const aggregationHeaders = options.aggregations.map(agg => {
+        const funcName = agg.function.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+        if (agg.function === 'count') return 'Count';
+        return `${funcName} of ${agg.column}`;
+    });
+
+    const summaryHeaders = [...options.groupingColumns, ...aggregationHeaders];
+    const uniqueHeaders = [...new Set(summaryHeaders)];
 
 
-    for (const groupKey in groupedData) {
-        const values = groupedData[groupKey];
-        const summaryRow: Record<string, any> = { [options.groupingColumn]: groupKey };
+    for (const [groupKey, rows] of groupedData.entries()) {
+        const summaryRow: Record<string, any> = {};
 
-        for (const func of options.functions) {
-            const header = `${func.charAt(0).toUpperCase() + func.slice(1)} (${options.aggregationColumn})`;
-            switch (func) {
+        // Add grouping column values to the summary row
+        const keyParts = groupKey.split('||');
+        options.groupingColumns.forEach((col, index) => {
+            summaryRow[col] = keyParts[index];
+        });
+
+        // Perform all aggregations for the current group
+        for (const agg of options.aggregations) {
+            const values = rows.map(r => r[agg.column]);
+            const headerName = aggregationHeaders[options.aggregations.indexOf(agg)];
+
+            switch (agg.function) {
                 case 'count':
-                    summaryRow['Count'] = values.length;
+                    // Count all rows in the group
+                    summaryRow['Count'] = rows.length;
                     break;
-                case 'sum':
-                    summaryRow[header] = values.reduce((acc, v) => acc + v, 0);
+                case 'count_unique':
+                    summaryRow[headerName] = new Set(values.filter(v => v !== null && v !== undefined)).size;
                     break;
-                case 'average':
-                    summaryRow[header] = values.reduce((acc, v) => acc + v, 0) / values.length;
-                    break;
-                case 'min':
-                    summaryRow[header] = Math.min(...values);
-                    break;
-                case 'max':
-                    summaryRow[header] = Math.max(...values);
+                default:
+                    // For numeric functions, filter out non-numeric values
+                    const numericValues = values
+                        .map(v => parseFloat(String(v)))
+                        .filter(v => !isNaN(v) && isFinite(v));
+
+                    if (numericValues.length === 0) {
+                        summaryRow[headerName] = 0; // or null/N/A
+                        continue;
+                    }
+
+                    switch (agg.function) {
+                        case 'sum':
+                            summaryRow[headerName] = numericValues.reduce((acc, v) => acc + v, 0);
+                            break;
+                        case 'average':
+                            summaryRow[headerName] = numericValues.reduce((acc, v) => acc + v, 0) / numericValues.length;
+                            break;
+                        case 'min':
+                            summaryRow[headerName] = Math.min(...numericValues);
+                            break;
+                        case 'max':
+                            summaryRow[headerName] = Math.max(...numericValues);
+                            break;
+                    }
                     break;
             }
         }
         summaryData.push(summaryRow);
     }
 
-    return { summaryData, summaryHeaders };
+    return { summaryData, summaryHeaders: uniqueHeaders };
 };
