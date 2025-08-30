@@ -1,4 +1,4 @@
-import { ComparisonOptions, DuplicateResult, ParsedFile } from '../types';
+import { ComparisonOptions, DuplicateResult, ParsedFile, DuplicateReportResult } from '../types';
 
 const generateCompositeKey = (row: Record<string, any>, columns: string[], options: ComparisonOptions): string => {
   return columns
@@ -95,4 +95,53 @@ export const findUniqueAndCommonRows = (
     totalDuplicates: commonRows.length,
     totalRowsProcessed: comparisonFile.rowCount,
   };
+};
+
+export const generateDuplicateReport = (
+  file: ParsedFile,
+  selectedColumns: string[],
+  options: ComparisonOptions
+): DuplicateReportResult => {
+    if (selectedColumns.length === 0) {
+        return { reportData: [], totalDuplicateRows: 0, totalDuplicateGroups: 0, totalRowsProcessed: file.rowCount };
+    }
+
+    const keyToRowsMap = new Map<string, Record<string, any>[]>();
+
+    // Group rows by composite key
+    for (const row of file.data) {
+        const key = generateCompositeKey(row, selectedColumns, options);
+        if (!keyToRowsMap.has(key)) {
+            keyToRowsMap.set(key, []);
+        }
+        keyToRowsMap.get(key)!.push(row);
+    }
+    
+    const duplicateOnlyReport: Record<string, any>[] = [];
+    let duplicateGroupId = 1;
+    let totalDuplicateRows = 0;
+    let totalDuplicateGroups = 0;
+
+    // Process groups to build the report, only including groups with more than one member
+    for (const rows of keyToRowsMap.values()) {
+        if (rows.length > 1) {
+            totalDuplicateGroups++;
+            totalDuplicateRows += rows.length;
+            rows.forEach((row, index) => {
+                duplicateOnlyReport.push({
+                    'Duplicate Group ID': duplicateGroupId,
+                    'Is Original': index === 0 ? 'Yes' : 'No',
+                    ...row,
+                });
+            });
+            duplicateGroupId++;
+        }
+    }
+
+    return {
+        reportData: duplicateOnlyReport,
+        totalDuplicateRows,
+        totalDuplicateGroups,
+        totalRowsProcessed: file.rowCount,
+    };
 };

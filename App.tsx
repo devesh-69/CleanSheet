@@ -3,12 +3,13 @@ import { Sidebar } from './components/Sidebar';
 import { Tool } from './types';
 import CompareFilesTool from './components/tools/CompareFilesTool';
 import SingleFileDuplicateRemover from './components/tools/SingleFileDuplicateRemover';
-import PlaceholderTool from './components/tools/PlaceholderTool';
 import SpecialCharsTool from './components/tools/SpecialCharsTool';
 import FindReplaceTool from './components/tools/FindReplaceTool';
 import MergeFilesTool from './components/tools/MergeFilesTool';
 import CompareColumnsTool from './components/tools/CompareColumnsTool';
 import QuickSummaryTool from './components/tools/QuickSummaryTool';
+import DataValidationTool from './components/tools/DataValidationTool';
+import ExportDuplicatesTool from './components/tools/ExportDuplicatesTool';
 
 
 const App: React.FC = () => {
@@ -31,9 +32,9 @@ const App: React.FC = () => {
       case Tool.QUICK_SUMMARY:
         return <QuickSummaryTool />;
       case Tool.DATA_VALIDATION:
-        return <PlaceholderTool title="Data Validation Checks" />;
+        return <DataValidationTool />;
       case Tool.EXPORT_DUPLICATES:
-        return <PlaceholderTool title="Export Duplicates as Report" />;
+        return <ExportDuplicatesTool />;
       default:
         return <CompareFilesTool />;
     }

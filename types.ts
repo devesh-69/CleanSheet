@@ -81,3 +81,39 @@ export type SummaryOptions = {
     groupingColumns: string[];
     aggregations: Aggregation[];
 };
+
+export type ValidationRuleType = 
+    | 'is_not_empty' 
+    | 'is_unique' 
+    | 'is_number' 
+    | 'is_integer'
+    | 'is_email' 
+    | 'is_url' 
+    | 'text_length_between'
+    | 'matches_regex';
+
+export type ValidationRule = {
+    id: number;
+    column: string;
+    type: ValidationRuleType;
+    min?: number;
+    max?: number;
+    regex?: string;
+};
+
+export type ValidationOptions = {
+    rules: ValidationRule[];
+};
+
+export type ValidationResult = {
+    invalidRows: Record<string, any>[];
+    totalErrors: number;
+    totalRowsProcessed: number;
+};
+
+export type DuplicateReportResult = {
+    reportData: Record<string, any>[];
+    totalDuplicateRows: number;
+    totalDuplicateGroups: number;
+    totalRowsProcessed: number;
+};
