@@ -5,12 +5,14 @@ export type ParsedFile = {
   data: Record<string, any>[];
   rowCount: number;
   columnCount: number;
+  columnTypes: Record<string, DataType>;
 };
 
 export type ParsedSheet = {
     sheetName: string;
     headers: string[];
     data: Record<string, any>[];
+    columnTypes: Record<string, DataType>;
 };
 
 export type ParsedWorkbook = {
@@ -19,10 +21,26 @@ export type ParsedWorkbook = {
     sheets: ParsedSheet[];
 };
 
+export enum DataType {
+    String = 'String',
+    Number = 'Number',
+    Integer = 'Integer',
+    Boolean = 'Boolean',
+    Date = 'Date',
+    Email = 'Email',
+    URL = 'URL',
+    PhoneNumber = 'Phone Number',
+    Mixed = 'Mixed',
+}
+
 export type ComparisonOptions = {
   caseSensitive: boolean;
   trimWhitespace: boolean;
   ignoreSpecialChars: boolean;
+  matchingMode: 'exact' | 'fuzzy' | 'phonetic';
+  fuzzyThreshold: number; // 0 to 1
+  primaryColumns: string[];
+  secondaryColumns: string[];
 };
 
 export type DuplicateResult = {
@@ -34,9 +52,12 @@ export type DuplicateResult = {
 
 export enum AppStep {
   UPLOAD,
+  PREVIEW,
   SELECT_COLUMNS,
   PROCESSING,
   RESULTS,
+  ANALYZE_MERGE,
+  RESOLVE_CONFLICTS,
 }
 
 export enum Tool {
@@ -50,6 +71,9 @@ export enum Tool {
   DATA_VALIDATION = 'DATA_VALIDATION',
   EXPORT_DUPLICATES = 'EXPORT_DUPLICATES',
   DASHBOARD_BUILDER = 'DASHBOARD_BUILDER',
+  FORMAT_CONVERTER = 'FORMAT_CONVERTER',
+  N_WAY_COMPARISON = 'N_WAY_COMPARISON',
+  SMART_NORMALIZATION = 'SMART_NORMALIZATION',
 }
 
 export type SpecialCharsOptions = {
@@ -125,11 +149,67 @@ export type ValidationResult = {
 };
 
 export type DuplicateReportResult = {
-    reportData: Record<string, any>[];
+    reportData: (Record<string, any> & {
+        'Confidence Score'?: string;
+        'Match Type'?: string;
+    })[];
     totalDuplicateRows: number;
     totalDuplicateGroups: number;
     totalRowsProcessed: number;
 };
+
+export type NWayComparisonResult = {
+    intersection: Record<string, any>[];
+    differences: {
+        fileName: string;
+        data: Record<string, any>[];
+    }[];
+};
+
+// --- Merge Tool Types ---
+export type ColumnOverlap = {
+  columnName: string;
+  overlapPercentage: number; // 0-100
+  uniqueValueRatio: number; // 0-1
+};
+
+export type MergeAnalysisReport = {
+  commonColumns: ColumnOverlap[];
+};
+
+export type MergeConflict = {
+    id: number; // For React keys
+    primaryKeyValues: Record<string, any>;
+    conflictingFields: {
+        column: string;
+        values: { fileName: string; value: any }[];
+    }[];
+};
+
+export type MergeResolution = {
+    conflictId: number;
+    resolutions: Record<string, any>; // { [columnName]: resolvedValue }
+};
+
+export type MergeResult = {
+    mergedData: Record<string, any>[];
+    conflicts: MergeConflict[];
+    mergedHeaders: string[];
+};
+
+// --- Smart Normalization Types ---
+export type NormalizationFormat = 'phone_us' | 'date_iso' | 'date_us' | 'text_cleanup';
+
+export type NormalizationRule = {
+    id: number;
+    selectedColumns: string[];
+    format: NormalizationFormat;
+};
+
+export type NormalizationOptions = {
+    rules: NormalizationRule[];
+};
+
 
 // --- Dashboard Types ---
 export type FilterOperator = 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'starts_with' | 'ends_with' | '>' | '<' | '>=' | '<=';

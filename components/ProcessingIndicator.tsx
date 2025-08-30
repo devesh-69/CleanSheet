@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { SpinnerIcon } from './ui/Icons';
+import { SpinnerIcon } from './tools/ui/Icons';
 
 interface ProcessingIndicatorProps {
     title: string;

@@ -2,9 +2,10 @@ import React from 'react';
 import { Tool } from '../types';
 import {
   LayoutGridIcon, CopyIcon, SparklesIcon, ReplaceIcon,
-  CombineIcon, ColumnsIcon, PieChartIcon, CheckSquareIcon, FileTextIcon, BarChartIcon
-} from './ui/Icons';
-import { Logo } from './ui/Logo';
+  CombineIcon, ColumnsIcon, PieChartIcon, CheckSquareIcon, FileTextIcon, BarChartIcon, RefreshCwIcon,
+  VennDiagramIcon, WandIcon
+} from './tools/ui/Icons';
+import { Logo } from './tools/ui/Logo';
 
 interface SidebarProps {
   activeTool: Tool;
@@ -54,6 +55,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTool, setActiveTool }) =
             <NavLink icon={<CopyIcon className="w-5 h-5" />} label="Single File Duplicates" tool={Tool.SINGLE_FILE_DUPLICATES} activeTool={activeTool} onClick={setActiveTool} />
             <NavLink icon={<SparklesIcon className="w-5 h-5" />} label="Special Characters" tool={Tool.SPECIAL_CHARS} activeTool={activeTool} onClick={setActiveTool} />
             <NavLink icon={<ReplaceIcon className="w-5 h-5" />} label="Find & Replace" tool={Tool.FIND_REPLACE} activeTool={activeTool} onClick={setActiveTool} />
+            <NavLink icon={<RefreshCwIcon className="w-5 h-5" />} label="Format Converter" tool={Tool.FORMAT_CONVERTER} activeTool={activeTool} onClick={setActiveTool} />
+            <NavLink icon={<WandIcon className="w-5 h-5" />} label="Smart Normalization" tool={Tool.SMART_NORMALIZATION} activeTool={activeTool} onClick={setActiveTool} />
           </nav>
         </div>
         <div>
@@ -61,6 +64,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTool, setActiveTool }) =
            <nav className="space-y-2">
             <NavLink icon={<LayoutGridIcon className="w-5 h-5" />} label="Find Unique Rows" tool={Tool.FIND_UNIQUE_ROWS} activeTool={activeTool} onClick={setActiveTool} />
             <NavLink icon={<CombineIcon className="w-5 h-5" />} label="Merge Multiple Files" tool={Tool.MERGE_FILES} activeTool={activeTool} onClick={setActiveTool} />
+            <NavLink icon={<VennDiagramIcon className="w-5 h-5" />} label="N-Way Comparison" tool={Tool.N_WAY_COMPARISON} activeTool={activeTool} onClick={setActiveTool} />
             <NavLink icon={<ColumnsIcon className="w-5 h-5" />} label="Compare Columns" tool={Tool.COMPARE_COLUMNS} activeTool={activeTool} onClick={setActiveTool} />
             <NavLink icon={<PieChartIcon className="w-5 h-5" />} label="Quick Summary" tool={Tool.QUICK_SUMMARY} activeTool={activeTool} onClick={setActiveTool} />
             <NavLink icon={<CheckSquareIcon className="w-5 h-5" />} label="Data Validation" tool={Tool.DATA_VALIDATION} activeTool={activeTool} onClick={setActiveTool} />

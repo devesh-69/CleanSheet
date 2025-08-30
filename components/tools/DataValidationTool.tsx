@@ -3,11 +3,12 @@ import { ParsedFile, AppStep, ValidationOptions, ValidationResult, ValidationRul
 import { FileUploader } from '../FileUploader';
 import { ResultsDisplay } from '../ResultsDisplay';
 import { validateData } from '../../services/dataValidator';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/Card';
-import { Button } from '../ui/Button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/Card';
+import { Button } from './ui/Button';
 import { ToolHeader } from '../ToolHeader';
 import { ProcessingIndicator } from '../ProcessingIndicator';
-import { XCircleIcon } from '../ui/Icons';
+import { XCircleIcon } from './ui/Icons';
+import { FilePreview } from '../FilePreview';
 
 const RULE_DEFINITIONS: { type: ValidationRuleType, label: string, requiresInput: 'none' | 'minmax' | 'regex' }[] = [
     { type: 'is_not_empty', label: 'Is Not Empty', requiresInput: 'none' },
@@ -125,7 +126,7 @@ const DataValidationTool: React.FC = () => {
     const handleFileUpload = (uploadedFile: ParsedFile | null, uploadError: string | null) => {
         if (uploadedFile) {
             setFile(uploadedFile);
-            setStep(AppStep.SELECT_COLUMNS);
+            setStep(AppStep.PREVIEW);
         }
     };
 
@@ -157,9 +158,14 @@ const DataValidationTool: React.FC = () => {
                         onFileUpload={handleFileUpload}
                     />
                 );
+            case AppStep.PREVIEW:
+                if (file) {
+                    return <FilePreview file={file} onConfirm={() => setStep(AppStep.SELECT_COLUMNS)} onBack={handleRestart} />;
+                }
+                return null;
             case AppStep.SELECT_COLUMNS:
                 if (file) {
-                    return <OptionsSelector file={file} onProcess={handleProcess} onBack={handleRestart} />;
+                    return <OptionsSelector file={file} onProcess={handleProcess} onBack={() => setStep(AppStep.PREVIEW)} />;
                 }
                 return null;
             case AppStep.PROCESSING:

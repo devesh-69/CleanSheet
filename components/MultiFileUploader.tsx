@@ -1,8 +1,9 @@
+
 import React, { useState, useCallback } from 'react';
 import { ParsedFile } from '../types';
 import { processFile } from '../services/fileProcessor';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/Card';
-import { UploadCloudIcon, FileIcon, CheckCircleIcon, XCircleIcon, SpinnerIcon } from './ui/Icons';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './tools/ui/Card';
+import { UploadCloudIcon, FileIcon, CheckCircleIcon, XCircleIcon, SpinnerIcon } from './tools/ui/Icons';
 
 interface FileStatus {
     id: string;
@@ -98,11 +99,11 @@ export const MultiFileUploader: React.FC<MultiFileUploaderProps> = ({
           className={`border-2 border-dashed ${borderAnimation} ${bgColor} rounded-lg p-8 text-center transition-all duration-300`}
           onDragEnter={handleDragEnter} onDragLeave={handleDragLeave} onDragOver={handleDragOver} onDrop={handleDrop}
         >
-          <input id="multi-file-upload" type="file" className="hidden" accept=".xlsx, .xls, .csv" onChange={handleChange} multiple />
+          <input id="multi-file-upload" type="file" className="hidden" accept=".xlsx, .xls, .csv, .tsv, .json" onChange={handleChange} multiple />
           <label htmlFor="multi-file-upload" className="cursor-pointer flex flex-col items-center justify-center space-y-2">
             <UploadCloudIcon className="w-12 h-12 text-gray-400" />
             <p className="text-sm text-gray-300"><span className="font-semibold text-blue-400">Click to upload</span> or drag and drop</p>
-            <p className="text-xs text-gray-500">XLSX, XLS, or CSV</p>
+            <p className="text-xs text-gray-500">XLSX, XLS, CSV, TSV, or JSON</p>
           </label>
         </div>
         {fileStatuses.length > 0 && (

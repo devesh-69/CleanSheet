@@ -1,6 +1,7 @@
+
 import React from 'react';
-import { Card, CardContent } from '../ui/Card';
-import { SparklesIcon } from '../ui/Icons';
+import { Card, CardContent } from './ui/Card';
+import { SparklesIcon } from './ui/Icons';
 import { ToolHeader } from '../ToolHeader';
 
 interface PlaceholderToolProps {

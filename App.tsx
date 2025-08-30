@@ -11,6 +11,9 @@ import QuickSummaryTool from './components/tools/QuickSummaryTool';
 import DataValidationTool from './components/tools/DataValidationTool';
 import ExportDuplicatesTool from './components/tools/ExportDuplicatesTool';
 import DashboardTool from './components/tools/DashboardTool';
+import FormatConverterTool from './components/tools/FormatConverterTool';
+import NWayComparisonTool from './components/tools/NWayComparisonTool';
+import SmartNormalizationTool from './components/tools/SmartNormalizationTool';
 
 
 const App: React.FC = () => {
@@ -38,6 +41,12 @@ const App: React.FC = () => {
         return <ExportDuplicatesTool />;
       case Tool.DASHBOARD_BUILDER:
         return <DashboardTool />;
+      case Tool.FORMAT_CONVERTER:
+        return <FormatConverterTool />;
+      case Tool.N_WAY_COMPARISON:
+        return <NWayComparisonTool />;
+      case Tool.SMART_NORMALIZATION:
+        return <SmartNormalizationTool />;
       default:
         return <CompareFilesTool />;
     }

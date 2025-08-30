@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { ParsedFile, ComparisonOptions, DuplicateResult, AppStep } from '../../types';
 import { FileUploader } from '../FileUploader';
 import { ColumnSelector } from '../ColumnSelector';
 import { ResultsDisplay } from '../ResultsDisplay';
-import { Button } from '../ui/Button';
-import { ArrowRightIcon } from '../ui/Icons';
+import { Button } from './ui/Button';
+import { ArrowRightIcon } from './ui/Icons';
 import { findUniqueAndCommonRows } from '../../services/duplicateDetector';
 import { ToolHeader } from '../ToolHeader';
 import { ProcessingIndicator } from '../ProcessingIndicator';
@@ -40,11 +41,11 @@ const CompareFilesTool: React.FC = () => {
     }
   };
 
-  const handleCompare = (selectedColumns: string[], options: ComparisonOptions) => {
+  const handleCompare = (options: ComparisonOptions) => {
     if (mainFile && comparisonFile) {
       setStep(AppStep.PROCESSING);
       setTimeout(() => {
-        const comparisonResults = findUniqueAndCommonRows(mainFile, comparisonFile, selectedColumns, options);
+        const comparisonResults = findUniqueAndCommonRows(mainFile, comparisonFile, options);
         setResults(comparisonResults);
         setStep(AppStep.RESULTS);
       }, 500);

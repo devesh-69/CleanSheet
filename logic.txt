@@ -1,127 +1,218 @@
-# Duplisheets Feature Logic Documentation
 
-This document outlines the core logic and algorithms used for each feature within the Duplisheets application.
+# Enhanced Duplisheets Features - Practical Improvements for Next.js/TypeScript
 
----
+## 1. Core Service Improvements
 
-## 1. Core Services
+### File Processing Enhancements
 
-### 1.1. File Parsing (`services/fileProcessor.ts`)
-- **Objective:** To parse `.xlsx`, `.xls`, and `.csv` files into a standardized JSON format (`ParsedFile` type).
-- **Excel Logic:**
-  - Uses the `SheetJS (xlsx)` library.
-  - The file is read as an `ArrayBuffer`.
-  - `XLSX.read` parses the buffer into a workbook object.
-  - The first sheet in the workbook is identified and converted to an array of JSON objects using `XLSX.utils.sheet_to_json`.
-  - It handles edge cases like empty sheets or sheets with only a header row.
-- **CSV Logic:**
-  - Uses the `PapaParse` library.
-  - The file is parsed with the `header: true` option, which automatically uses the first row as keys for the resulting JSON objects.
-  - `skipEmptyLines: true` ensures empty rows are ignored.
-  - Robust error handling is included to report specific CSV parsing errors.
-- **Workbook Parsing (for Dashboard):**
-  - A separate `processWorkbook` function parses *all* sheets within an Excel file, returning an array of `ParsedSheet` objects, which is necessary for the multi-sheet dashboard functionality.
+**Current State**: Support for Excel (.xlsx, .xls), CSV, TSV, and JSON. File processor automatically detects character encoding (e.g., UTF-8, Latin-1) for text files to prevent corruption. CSV parsing is robust, automatically trying comma, semicolon, and pipe delimiters. All files are limited to 50MB to ensure stability. File processor automatically detects data types (Number, Date, Email, etc.) for each column upon upload.
+**Improvements**:
+- **Better Data Type Detection**: [COMPLETED] Implemented a data type analyzer that uses regex and validation checks on a data sample to determine the most likely type for each column (e.g., Number, Date, Email, String). This is now integrated into the file processing pipeline.
+- **Large File Handling**: [COMPLETED] All files are gracefully limited to 50MB with a clear user message to ensure browser stability.
+- **Smart Error Recovery**: [COMPLETED] When files are corrupted, provide multiple parsing attempts with different delimiters and encoding options
+- **Encoding Detection**: [COMPLETED] Automatically detects character encoding (e.g., UTF-8, Latin-1) for text-based files (CSV, TSV, JSON) to prevent garbled text and parsing errors.
+- **Preview Mode**: [COMPLETED] Allow users to preview first 100 rows before processing entire large files
+- **Custom Delimiters**: [COMPLETED] Support semicolons, pipes, and custom field separators for unusual CSV formats
 
-### 1.2. Data Exporting (`services/fileProcessor.ts`)
-- **Objective:** To convert JSON data back into downloadable `.xlsx` or `.csv` files.
-- **Excel Logic:**
-  - Uses `SheetJS`. `XLSX.utils.json_to_sheet` converts the data array to a worksheet.
-  - A new workbook is created, the sheet is appended, and `XLSX.writeFile` triggers the browser download.
-- **CSV Logic:**
-  - A custom `manualUnparse` function is used to avoid external dependencies.
-  - It creates a header row by joining all column keys.
-  - It iterates through each data row, mapping values to a string and ensuring proper CSV escaping (handling commas, quotes, and newlines within fields).
-  - A Byte Order Mark (BOM) `\uFEFF` is prepended to the final string to ensure proper UTF-8 handling in Excel.
-  - The final string is converted to a `Blob` and downloaded via a temporary anchor link.
+### Export System Improvements
 
----
+**Current State**: Basic Excel and CSV export functionality. XLSX exports can contain multiple sheets, corresponding to result tabs in the UI. Exported Excel files feature auto-sized columns and styled headers for improved readability.
+**Improvements**:
+- **Multi-Sheet Workbooks**: [COMPLETED] Export related data across multiple sheets with proper naming and organization
+- **Advanced Formatting**: [COMPLETED] Include basic conditional formatting, column width adjustment, and header styling in Excel exports
+- **Compressed Archives**: [COMPLETED] Automatically zip large datasets and provide batch export capabilities
+- **Format Conversion Pipeline**: [COMPLETED] Convert between any supported formats seamlessly with validation
 
-## 2. Tool-Specific Logic
+## 2. Duplicate Detection Enhancements
 
-### 2.1. Single File Duplicate Remover (`services/duplicateDetector.ts`)
-- **Function:** `findDuplicatesInSingleFile`
-- **Logic:**
-  1.  A `compositeKey` is generated for each row. This key is a string created by concatenating the values of the user-selected columns.
-  2.  Before concatenation, each value is normalized based on user-selected options (e.g., converted to lowercase, trimmed of whitespace, stripped of special characters).
-  3.  A JavaScript `Set` (`seenKeys`) is used for efficient tracking of unique composite keys.
-  4.  The function iterates through the data:
-      - If a row's composite key is already in the `Set`, the row is added to the `duplicates` array.
-      - If the key is not in the `Set`, it's the first time seeing this combination. The row is added to the `cleanedData` array, and its key is added to the `Set`.
-  5.  Returns the `duplicates` and `cleanedData` arrays.
+### Advanced Matching Algorithms
 
-### 2.2. Find Unique Rows (Compare Files) (`services/duplicateDetector.ts`)
-- **Function:** `findUniqueAndCommonRows`
-- **Logic:**
-  1.  It first creates a `Set` of composite keys from every row in the `mainFile` (the base file). This `Set` serves as a high-performance lookup table.
-  2.  It then iterates through each row of the `comparisonFile`.
-  3.  For each row, it generates a normalized composite key using the same logic as the duplicate remover.
-  4.  It checks if this key exists in the `mainFile`'s key `Set`.
-      - If the key **exists**, the row is considered a "common row" and is added to the `commonRows` array.
-      - If the key **does not exist**, the row is unique to the `comparisonFile` and is added to the `uniqueRows` array.
-  5.  Returns the `uniqueRows` and `commonRows`.
+**Current State**: Simple exact matching based on concatenated column values
+**Improvements**:
+- **Fuzzy Matching**: [COMPLETED] Implement Levenshtein distance algorithm to catch typos and variations (edit distance of 1-2 characters)
+- **Phonetic Matching**: [COMPLETED] Use Soundex algorithm to match similar-sounding names and words
+- **Smart Weighting**: [COMPLETED] Assign importance weights to columns based on uniqueness - calculate uniqueness ratio and weight accordingly
+- **Confidence Scoring**: [COMPLETED] Assign probability scores to duplicate matches (Exact: 100%, High: 85-99%, Medium: 70-84%, Low: 50-69%)
+- **Progressive Comparison**: [COMPLETED] Process exact matches first, then fuzzy matches with user-defined thresholds
+- **Custom Similarity Rules**: [COMPLETED] Allow users to define business-specific matching rules with configurable tolerance levels
 
-### 2.3. Special Characters Remover (`services/dataCleaner.ts`)
-- **Function:** `removeSpecialChars`
-- **Logic:**
-  - It iterates through each row and applies transformations only to the user-selected columns.
-  - **Filter Mode (Exclusive):** If a filter mode (e.g., `alphanumeric`) is active, it uses a regex to remove any characters that *do not* match the desired set. This mode overrides all other options.
-  - **Removal Mode (Additive):** If no filter is set, it sequentially applies regex replacements for predefined character sets (punctuation, math symbols, currency, emojis) and any user-provided custom characters.
+### Multi-File Comparison
 
-### 2.4. Find & Replace (`services/dataCleaner.ts`)
-- **Function:** `findAndReplace`
-- **Logic:**
-  - Iterates through each selected column of each row.
-  - For each cell, it applies every user-defined find/replace operation in sequence.
-  - **Match Entire Cell:** If this option is enabled, it performs a direct string equality check. If the cell content matches the `find` term, the entire cell is replaced.
-  - **Partial Match:** If `matchEntireCell` is disabled, it uses a regular expression to replace all occurrences of the `find` term within the cell. The `find` term is escaped to prevent unintended regex behavior. Case sensitivity is handled by adding the `i` flag to the regex.
+**Current State**: Basic unique row detection between two files
+**Improvements**:
+- **N-Way Comparison**: [COMPLETED] Compare across multiple files simultaneously with intersection/difference analysis
+- **Hierarchical Matching**: [COMPLETED] Define primary and secondary matching criteria for more nuanced comparisons
+- **Merge Recommendations**: [COMPLETED] Suggest optimal merge strategies based on data overlap analysis
+- **Conflict Resolution**: [COMPLETED] Provide side-by-side comparison when the same record appears differently across files
 
-### 2.5. Merge Multiple Files (`services/dataCleaner.ts`)
-- **Function:** `mergeFiles`
-- **Logic:**
-  1.  It first determines the complete set of headers by creating a union of all headers from all input files.
-  2.  Optionally, it adds a "Source File" column header.
-  3.  It iterates through each file and each row. For every row, it creates a new object that contains all possible headers (initialized with a default empty value).
-  4.  It then populates this new object with the data from the current row, ensuring that all final rows have a consistent structure.
+## 3. Data Cleaning & Transformation
 
-### 2.6. Compare Columns (`services/dataCleaner.ts`)
-- **Function:** `compareColumns`
-- **Logic:**
-  - Iterates through each row of the dataset.
-  - For each row, it extracts the values from the two user-selected columns (`columnA` and `columnB`).
-  - It normalizes both values based on comparison options (case, whitespace, etc.).
-  - If the two normalized values are not identical, the original (unmodified) row is added to a `mismatches` array.
+### Intelligent Pattern Recognition
 
-### 2.7. Quick Summary Report (`services/dataCleaner.ts`)
-- **Function:** `generateSummaryReport`
-- **Logic:**
-  1.  **Grouping:** It uses a `Map` to group the data. It iterates through all rows and generates a composite key from the values in the user-selected "Group By" columns. The map's keys are these composite keys, and the values are arrays of rows belonging to that group.
-  2.  **Aggregation:** It then iterates through each group in the map. For each group, it calculates the user-defined aggregations (`count`, `sum`, `average`, `min`, `max`, `count_unique`).
-  3.  For numeric functions (`sum`, `average`, etc.), it first filters the data to ensure only valid numbers are included in the calculation.
-  4.  The final result is an array of objects, where each object represents a group and its calculated values.
+**Current State**: Manual specification of cleaning rules
+**Improvements**:
+- **Smart Normalization**: [COMPLETED] Standardize formats (phone numbers, dates, addresses) using comprehensive regex patterns
+- **Bulk Operations**: [COMPLETED] Apply the same cleaning rule across multiple columns or datasets with preview
+- **Reversible Operations**: Maintain complete operation history in browser memory with one-click undo capability
+- **Quality Scoring**: Provide before/after quality scores using statistical analysis
 
-### 2.8. Data Validation (`services/dataValidator.ts`)
-- **Function:** `validateData`
-- **Logic:**
-  1.  It maintains a dictionary of validator functions, each corresponding to a specific rule type (e.g., a regex for `is_email`, `Number.isInteger` for `is_integer`).
-  2.  **Uniqueness Optimization:** For the `is_unique` rule, it performs a pre-pass over the data to find all non-unique values in the selected column. This is much more performant than checking for duplicates during the main iteration.
-  3.  It iterates through each row and checks the relevant columns against the user-defined rules.
-  4.  If a rule is violated, the original row is appended to an `invalidRows` array with additional metadata about the error (which column failed, the error message, and the original row number).
+### Advanced Find & Replace
 
-### 2.9. Export Duplicates Report (`services/duplicateDetector.ts`)
-- **Function:** `generateDuplicateReport`
-- **Logic:**
-  1.  Similar to the Quick Summary tool, it first groups all rows using a `Map` based on a composite key from selected columns.
-  2.  It then filters these groups, keeping only those with more than one row (i.e., the duplicates).
-  3.  For each duplicate group, it iterates through the rows and adds them to the final report.
-  4.  It adds two special columns to the report: `Duplicate Group ID` (a unique identifier for each group of duplicates) and `Is Original` (which marks the first row encountered in each group).
+**Current State**: Basic text replacement functionality
+**Improvements**:
+- **Regex Support**: Enable powerful regular expression matching with common pattern library
+- **Conditional Replacement**: Replace values only when certain conditions are met in other columns
+- **Bulk Pattern Library**: Provide pre-built patterns for common cleaning tasks (remove extra spaces, fix capitalization, standardize abbreviations)
+- **Smart Suggestions**: Analyze data patterns to suggest common find/replace operations
+- **Preview Changes**: Show exactly what will change before applying operations with diff highlighting
+- **Batch Processing**: Apply multiple find/replace operations in sequence with progress tracking
 
-### 2.10. Interactive Dashboard (`components/tools/DashboardTool.tsx`)
-- **Logic:** This tool's logic is primarily based on reactive data processing using React's `useMemo` hooks.
-  1.  **Data Pipeline:** A chain of memoized calculations is created:
-      - `activeSheet` data is the source.
-      - `filteredData` is derived by applying user filters to the source.
-      - `sortedData` is derived by sorting `filteredData`.
-      - `paginatedData` slices `sortedData` for table display.
-  2.  **Aggregation for Charts:** The core visualization logic is in the `aggregatedData` memo. It takes the final `sortedData`, groups it by the selected X-axis, and applies an aggregation function (count, sum, average) to the Y-axis values for each group. For scatter plots, it skips aggregation.
-  3.  **Chart Rendering:** A `useEffect` hook monitors `aggregatedData`. When the data changes, it destroys the previous `Chart.js` instance and renders a new one with the updated data and configuration.
-  4.  **Key Insights:** A `useMemo` hook analyzes the `aggregatedData` to generate simple textual summaries, such as identifying the category with the highest value or calculating the total sum.
+### Data Standardization
+
+**New Feature**: Comprehensive data standardization toolkit
+- **Address Standardization**: Normalize addresses using postal patterns with apartment/suite handling
+- **Name Standardization**: Properly format person and company names with title case and prefix/suffix handling
+- **Phone Number Formatting**: Convert all phone numbers to consistent formats using regex patterns for different countries
+- **Date Normalization**: Convert various date formats to standardized ISO format using date parsing libraries
+- **Currency Standardization**: Normalize monetary values with proper currency symbols and decimal handling
+
+## 4. Data Validation & Quality Assessment
+
+### Multi-Layer Validation System
+
+**Current State**: Basic rule-based validation
+**Improvements**:
+- **Statistical Validation**: Detect outliers using Z-scores and Interquartile Range calculations
+- **Cross-Column Validation**: Validate relationships between columns (start date before end date, state matches ZIP code)
+- **Business Rule Engine**: Create complex validation rules with conditional logic using JavaScript functions
+- **Real-Time Validation**: Validate data as it's being processed with immediate visual feedback
+- **Batch Validation**: Process large datasets efficiently with progress tracking and pause/resume capability
+- **Custom Rule Builder**: Form-based interface for creating validation rules without coding
+
+### Comprehensive Quality Scoring
+
+**New Feature**: Data quality assessment framework
+- **Completeness Score**: Measure percentage of missing values across all fields
+- **Consistency Score**: Evaluate format consistency within columns using pattern analysis
+- **Accuracy Score**: Assess data type matching and format correctness using validation functions
+- **Validity Score**: Check against business rules and domain constraints
+- **Uniqueness Score**: Measure duplicate rates and data redundancy
+- **Overall Quality**: Weighted combination of all quality metrics
+
+### Quality Improvement Recommendations
+
+**New Feature**: Rule-based data quality suggestions
+- **Pattern-Based Suggestions**: Identify common data issues using predefined patterns and suggest specific fixes
+- **Priority Ranking**: Rank quality issues by impact (percentage of affected rows) and ease of fixing
+- **Automated Fixes**: Provide one-click solutions for common quality problems
+- **Quality Tracking**: Monitor quality improvements over time with simple metrics storage
+- **Best Practice Guidance**: Educational tooltips and help text for maintaining high data quality
+
+## 5. Advanced Analytics & Reporting
+
+### Enhanced Dashboard Capabilities
+
+**Current State**: Basic charts and summary statistics
+**Improvements**:
+- **Interactive Visualizations**: Click-to-filter functionality and linked chart interactions
+- **Advanced Chart Types**: Heatmaps using color scales, grouped bar charts, stacked areas
+- **Real-Time Updates**: Automatic chart refresh when underlying data changes using React state
+- **Custom Calculations**: Create derived metrics and KPIs with formula builder using JavaScript expressions
+- **Dashboard Templates**: Pre-built dashboards for common business scenarios (sales, inventory, customer analysis)
+- **Export Dashboard**: Save dashboard configurations as JSON and generate static reports
+
+### Statistical Analysis
+
+**New Feature**: Basic statistical analysis tools
+- **Descriptive Statistics**: Calculate mean, median, mode, standard deviation, quartiles for numeric columns
+- **Correlation Analysis**: Calculate Pearson correlation coefficients between numeric variables
+- **Trend Analysis**: Calculate growth rates, moving averages, and trend directions using time-based analysis
+- **Distribution Analysis**: Generate frequency distributions and histograms
+- **Cross-Tabulation**: Create pivot table-style cross-tabulations for categorical data
+- **Comparative Analysis**: Compare datasets side-by-side with statistical summaries
+
+### Advanced Reporting Engine
+
+**New Feature**: Comprehensive reporting system
+- **Custom Report Builder**: Drag-and-drop interface for creating reports using pre-defined components
+- **Report Templates**: Industry-specific report templates for common use cases
+- **Automated Insights**: Generate text-based insights from data using rule-based analysis
+- **Executive Summaries**: Create high-level summaries with key metrics and trends
+- **Export Options**: Generate PDF reports using libraries like jsPDF or Puppeteer
+
+## 6. Performance & Scalability Improvements
+
+### Memory & Processing Optimization
+
+**Current Issues**: Performance degrades with large datasets
+**Improvements**:
+- **Chunked Processing**: Handle large files by processing data in configurable chunks (1000-5000 rows)
+- **Virtual Scrolling**: Display large datasets smoothly using react-window or similar libraries
+- **Background Processing**: Move heavy computations to Web Workers to maintain UI responsiveness
+- **Smart Caching**: Cache processed results in browser memory with configurable TTL
+- **Progressive Loading**: Load and display data incrementally with loading indicators
+- **Memory Management**: Implement proper cleanup and garbage collection for large operations
+
+### Enhanced Error Handling
+
+**Current State**: Basic error messages
+**Improvements**:
+- **Contextual Error Messages**: Provide specific guidance based on error type and data context
+- **Error Recovery Suggestions**: Offer actionable steps to resolve issues with retry mechanisms
+- **Graceful Degradation**: Fall back to simpler processing methods when complex operations fail
+- **Operation Rollback**: Maintain operation history to undo problematic changes
+- **Detailed Error Logging**: Comprehensive client-side error tracking for debugging
+- **User-Friendly Notifications**: Clear, actionable error messages with visual indicators
+
+## 7. User Experience Enhancements
+
+### Improved Interface Design
+
+**Current State**: Functional but basic interface
+**Improvements**:
+- **Guided Workflows**: Step-by-step wizards for complex operations using multi-step forms
+- **Smart Defaults**: Automatically select appropriate options based on data analysis
+- **Progress Indicators**: Clear progress bars and status updates during long operations
+- **Keyboard Shortcuts**: Power-user shortcuts for common operations using hotkeys
+- **Customizable Layouts**: Save and restore user preferences for tool arrangements
+- **Responsive Design**: Ensure all features work well on tablets and smaller screens
+
+### Enhanced Data Preview
+
+**New Feature**: Advanced data exploration capabilities
+- **Column Profiling**: Show data type, unique values, null percentage for each column in expandable panels
+- **Statistical Summaries**: Automatic calculation of descriptive statistics for numeric columns
+- **Data Sampling**: Intelligent sampling for quick analysis of large datasets
+- **Search and Filter**: Quick search across all data with column-specific filtering
+- **Sort and Pagination**: Efficient sorting and pagination for large datasets
+
+## 8. Advanced Features
+
+### File Management System
+
+**New Feature**: Better file organization
+- **Project Management**: Group related files and operations into projects
+- **File History**: Track versions of processed files with timestamps
+- **Bulk Operations**: Apply the same operation across multiple files
+- **File Comparison**: Compare different versions of the same file
+- **Import/Export Projects**: Save and share entire project configurations
+
+### Data Pipeline Builder
+
+**New Feature**: Visual workflow creation
+- **Operation Chaining**: Chain multiple data operations together with visual flow
+- **Conditional Logic**: Add if-then logic to data processing workflows
+- **Reusable Templates**: Save and reuse common operation sequences
+- **Batch Processing**: Apply workflows to multiple files automatically
+- **Progress Tracking**: Monitor complex workflow execution with detailed progress
+
+### Integration Capabilities
+
+**New Feature**: Connect with external systems (keeping it simple)
+- **URL Import**: Import CSV/JSON data directly from URLs
+- **Local File System**: Better integration with local file system using File System Access API where supported
+- **Copy/Paste Data**: Import data directly from clipboard (from Excel, Google Sheets)
+- **Export Automation**: Generate files and prepare them for easy sharing
+- **Simple API Export**: Generate data in API-friendly formats (JSON, XML)
+
+These improvements focus on practical enhancements that can be implemented with standard web technologies, existing JavaScript libraries, and don't require complex AI/ML infrastructure while still providing significant value to users.

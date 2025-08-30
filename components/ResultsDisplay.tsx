@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/Card';
-import { Button } from './ui/Button';
-import { DownloadIcon } from './ui/Icons';
-import { exportFile } from '../services/fileProcessor';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './tools/ui/Card';
+import { Button } from './tools/ui/Button';
+import { DownloadIcon, ArchiveIcon, SpinnerIcon } from './tools/ui/Icons';
+import { exportFile, exportTabsAsZip } from '../services/fileProcessor';
 
 interface ResultTab {
     title: string;
@@ -34,6 +34,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     title, description, headers, tabs, fileForExportName, onRestart, restartButtonText = "Start Over" 
 }) => {
   const [activeTabIndex, setActiveTabIndex] = useState(0);
+  const [isZipping, setIsZipping] = useState(false);
 
   const activeTabData = tabs[activeTabIndex]?.data || [];
   const totalRows = activeTabData.length;
@@ -43,18 +44,35 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   const paginatedData = activeTabData.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
   const handleDownload = (format: 'xlsx' | 'csv') => {
-    const dataToExport = tabs[activeTabIndex]?.data;
-    if (!dataToExport || dataToExport.length === 0) return;
-
     const originalName = fileForExportName.split('.')[0];
-    const activeTabTitle = tabs[activeTabIndex]?.title.replace(/\s+/g, '_') || 'data';
-    const fileName = `${originalName}_${activeTabTitle}.${format}`;
 
-    exportFile(dataToExport, fileName, format);
+    if (format === 'xlsx') {
+        if (!tabs.some(t => t.data.length > 0)) return;
+        const fileName = `${originalName}_results.xlsx`;
+        // Pass empty array for first arg as it's unused for multi-sheet exports.
+        // Pass all tabs in the fourth argument.
+        exportFile([], fileName, 'xlsx', tabs);
+    } else { // format is 'csv'
+        if (activeTabData.length === 0) return;
+        const activeTabTitle = tabs[activeTabIndex]?.title.replace(/\s+/g, '_') || 'data';
+        const fileName = `${originalName}_${activeTabTitle}.csv`;
+        exportFile(activeTabData, fileName, 'csv');
+    }
+  };
+
+  const handleDownloadZip = async () => {
+    const originalName = fileForExportName.split('.')[0];
+    setIsZipping(true);
+    try {
+        await exportTabsAsZip(tabs, originalName);
+    } finally {
+        setIsZipping(false);
+    }
   };
 
   const showTabs = tabs.length > 0;
-  const canDownload = activeTabData.length > 0;
+  const canDownloadCsv = activeTabData.length > 0;
+  const canDownloadXlsx = tabs.some(tab => tab.data.length > 0);
 
   return (
     <Card className="w-full max-w-6xl mx-auto animate-slide-in">
@@ -90,13 +108,17 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
             )}
             {showTabs && (
                 <div className={`flex space-x-2 ${!showTabs ? 'w-full justify-end' : ''}`}>
-                <Button variant="secondary" onClick={() => handleDownload('csv')} disabled={!canDownload}>
+                <Button variant="secondary" onClick={() => handleDownload('csv')} disabled={!canDownloadCsv}>
                     <DownloadIcon className="w-4 h-4 mr-2"/>
                     Download CSV
                 </Button>
-                <Button onClick={() => handleDownload('xlsx')} disabled={!canDownload}>
+                <Button variant="secondary" onClick={() => handleDownload('xlsx')} disabled={!canDownloadXlsx}>
                     <DownloadIcon className="w-4 h-4 mr-2"/>
                     Download XLSX
+                </Button>
+                <Button onClick={handleDownloadZip} disabled={!canDownloadXlsx || isZipping}>
+                    {isZipping ? <SpinnerIcon className="w-4 h-4 mr-2" /> : <ArchiveIcon className="w-4 h-4 mr-2"/>}
+                    Download ZIP
                 </Button>
                 </div>
             )}

@@ -1,13 +1,15 @@
+
 import React, { useState } from 'react';
 import { ParsedFile, AppStep, ComparisonOptions, ColumnComparisonResult } from '../../types';
 import { FileUploader } from '../FileUploader';
 import { ResultsDisplay } from '../ResultsDisplay';
 import { compareColumns } from '../../services/dataCleaner';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/Card';
-import { Button } from '../ui/Button';
-import { Toggle } from '../ui/Toggle';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/Card';
+import { Button } from './ui/Button';
+import { Toggle } from './ui/Toggle';
 import { ToolHeader } from '../ToolHeader';
 import { ProcessingIndicator } from '../ProcessingIndicator';
+import { FilePreview } from '../FilePreview';
 
 const OptionsSelector: React.FC<{
     file: ParsedFile,
@@ -16,10 +18,15 @@ const OptionsSelector: React.FC<{
 }> = ({ file, onProcess, onBack }) => {
     const [columnA, setColumnA] = useState<string>(file.headers[0] || '');
     const [columnB, setColumnB] = useState<string>(file.headers[1] || '');
+    // FIX: Initialize state with all required fields from ComparisonOptions type.
     const [options, setOptions] = useState<ComparisonOptions>({
         caseSensitive: false,
         trimWhitespace: true,
         ignoreSpecialChars: false,
+        matchingMode: 'exact',
+        fuzzyThreshold: 0.8,
+        primaryColumns: [],
+        secondaryColumns: [],
     });
 
     const handleProcess = () => {
@@ -97,7 +104,7 @@ const CompareColumnsTool: React.FC = () => {
     const handleFileUpload = (uploadedFile: ParsedFile | null, uploadError: string | null) => {
         if (uploadedFile) {
             setFile(uploadedFile);
-            setStep(AppStep.SELECT_COLUMNS);
+            setStep(AppStep.PREVIEW);
         }
     };
 
@@ -129,9 +136,14 @@ const CompareColumnsTool: React.FC = () => {
                         onFileUpload={handleFileUpload}
                     />
                 );
+            case AppStep.PREVIEW:
+                if (file) {
+                    return <FilePreview file={file} onConfirm={() => setStep(AppStep.SELECT_COLUMNS)} onBack={handleRestart} />;
+                }
+                return null;
             case AppStep.SELECT_COLUMNS:
                 if (file) {
-                    return <OptionsSelector file={file} onProcess={handleProcess} onBack={handleRestart} />;
+                    return <OptionsSelector file={file} onProcess={handleProcess} onBack={() => setStep(AppStep.PREVIEW)} />;
                 }
                 return null;
             case AppStep.PROCESSING:

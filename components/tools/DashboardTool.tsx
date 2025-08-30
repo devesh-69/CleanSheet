@@ -1,11 +1,12 @@
+
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { ParsedWorkbook, ParsedSheet, DashboardFilter, FilterOperator, DashboardSort, ChartConfig, ChartType, AggregationType } from '../../types';
+import { ParsedWorkbook, ParsedSheet, DashboardFilter, FilterOperator, DashboardSort, ChartConfig, ChartType, AggregationType, DataType } from '../../types';
 import { processWorkbook } from '../../services/fileProcessor';
 import { ToolHeader } from '../ToolHeader';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/Card';
-import { Button } from '../ui/Button';
-import { SpinnerIcon, UploadCloudIcon, XCircleIcon, DownloadIcon, SparklesIcon } from '../ui/Icons';
-import { Accordion } from '../ui/Accordion';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/Card';
+import { Button } from './ui/Button';
+import { SpinnerIcon, UploadCloudIcon, XCircleIcon, DownloadIcon, SparklesIcon } from './ui/Icons';
+import { Accordion } from './Accordion';
 
 declare const Chart: any;
 declare const jsPDF: any;
@@ -78,49 +79,39 @@ const DashboardTool: React.FC = () => {
         return workbook?.sheets.find(s => s.sheetName === activeSheetName);
     }, [workbook, activeSheetName]);
 
-    const columnTypes = useMemo(() => {
-        if (!activeSheet || activeSheet.data.length < 5) return {};
-        const types: Record<string, 'numerical' | 'categorical'> = {};
-        const sampleSize = Math.min(50, activeSheet.data.length);
-        const sampleRows = activeSheet.data.slice(0, sampleSize);
-
-        for (const header of activeSheet.headers) {
-            let numericCount = 0;
-            let nonNullCount = 0;
-            for (const row of sampleRows) {
-                const value = row[header];
-                if (value !== null && value !== '' && value !== undefined) {
-                    nonNullCount++;
-                    if (!isNaN(parseFloat(String(value))) && isFinite(Number(value))) {
-                        numericCount++;
-                    }
-                }
-            }
-            if (nonNullCount > 4 && (numericCount / nonNullCount) > 0.8) {
-                types[header] = 'numerical';
-            } else {
-                types[header] = 'categorical';
-            }
-        }
-        return types;
+    const numericalColumns = useMemo(() => {
+        if (!activeSheet) return [];
+        return activeSheet.headers.filter(h => 
+            activeSheet.columnTypes[h] === DataType.Number || activeSheet.columnTypes[h] === DataType.Integer
+        );
     }, [activeSheet]);
-    
-    const categoricalColumns = useMemo(() => Object.keys(columnTypes).filter(k => columnTypes[k] === 'categorical'), [columnTypes]);
-    const numericalColumns = useMemo(() => Object.keys(columnTypes).filter(k => columnTypes[k] === 'numerical'), [columnTypes]);
+
+    const categoricalColumns = useMemo(() => {
+        if (!activeSheet) return [];
+        return activeSheet.headers.filter(h => 
+            activeSheet.columnTypes[h] !== DataType.Number && activeSheet.columnTypes[h] !== DataType.Integer
+        );
+    }, [activeSheet]);
 
     useEffect(() => {
-        if (workbook && workbook.sheets.length > 0) {
+        if (workbook && workbook.sheets.length > 0 && !activeSheet) {
             const firstSheet = workbook.sheets[0];
             setActiveSheetName(firstSheet.sheetName);
+        }
+    }, [workbook, activeSheet]);
+
+
+    useEffect(() => {
+        if (activeSheet) {
             setFilters([]);
             setSort(null);
             
-            const firstCat = categoricalColumns[0] || firstSheet.headers[0] || '';
-            const firstNum = numericalColumns[0] || firstSheet.headers.find(h => h !== firstCat) || '';
+            const firstCat = categoricalColumns[0] || activeSheet.headers[0] || '';
+            const firstNum = numericalColumns[0] || activeSheet.headers.find(h => h !== firstCat) || '';
 
             setChartConfig({ type: 'bar', xAxisColumn: firstCat, yAxisColumn: firstNum, aggregation: 'count' });
         }
-    }, [workbook, columnTypes]); // Depends on columnTypes now
+    }, [activeSheetName, workbook]); // Reruns when sheet changes
 
     const filteredData = useMemo(() => {
         if (!activeSheet) return [];
@@ -152,11 +143,11 @@ const DashboardTool: React.FC = () => {
     }, [activeSheet, filters]);
     
     const sortedData = useMemo(() => {
-        if (!sort || !sort.column) return filteredData;
+        if (!sort || !sort.column || !activeSheet) return filteredData;
         return [...filteredData].sort((a, b) => {
             const valA = a[sort.column];
             const valB = b[sort.column];
-            const isNumeric = columnTypes[sort.column] === 'numerical';
+            const isNumeric = activeSheet.columnTypes[sort.column] === DataType.Number || activeSheet.columnTypes[sort.column] === DataType.Integer;
 
             if (isNumeric) {
                 const numA = parseFloat(valA);
@@ -170,7 +161,7 @@ const DashboardTool: React.FC = () => {
                 return 0;
             }
         });
-    }, [filteredData, sort, columnTypes]);
+    }, [filteredData, sort, activeSheet]);
 
     const totalPages = Math.ceil(sortedData.length / ROWS_PER_PAGE);
     const paginatedData = useMemo(() => {
@@ -424,7 +415,7 @@ const DashboardTool: React.FC = () => {
                             {keyInsights.length > 0 && (
                                 <div className="mt-4 p-4 bg-white/5 rounded-lg border border-white/10">
                                     <h4 className="font-semibold text-gray-200 flex items-center mb-2"><SparklesIcon className="w-5 h-5 mr-2 text-yellow-400"/> Key Insights</h4>
-                                    <ul className="list-disc list-inside text-sm text-gray-300 space-y-1">{keyInsights.map((insight, i) => <li key={i}>{insight}</li>)}</ul>
+                                    <ul className="list-disc list-inside text-sm text-gray-300 space-y-1">{keyInsights.map((insight, i) => <li key={i}>{insight}</li></ul>
                                 </div>
                             )}
                         </CardContent>

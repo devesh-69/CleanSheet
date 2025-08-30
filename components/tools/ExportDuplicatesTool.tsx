@@ -6,6 +6,7 @@ import { ResultsDisplay } from '../ResultsDisplay';
 import { generateDuplicateReport } from '../../services/duplicateDetector';
 import { ToolHeader } from '../ToolHeader';
 import { ProcessingIndicator } from '../ProcessingIndicator';
+import { FilePreview } from '../FilePreview';
 
 const ExportDuplicatesTool: React.FC = () => {
     const [step, setStep] = useState<AppStep>(AppStep.UPLOAD);
@@ -15,15 +16,15 @@ const ExportDuplicatesTool: React.FC = () => {
     const handleFileUpload = (uploadedFile: ParsedFile | null, uploadError: string | null) => {
         if (uploadedFile) {
             setFile(uploadedFile);
-            setStep(AppStep.SELECT_COLUMNS);
+            setStep(AppStep.PREVIEW);
         }
     };
 
-    const handleProcess = (selectedColumns: string[], options: ComparisonOptions) => {
+    const handleProcess = (options: ComparisonOptions) => {
         if (file) {
             setStep(AppStep.PROCESSING);
             setTimeout(() => {
-                const reportResults = generateDuplicateReport(file, selectedColumns, options);
+                const reportResults = generateDuplicateReport(file, options);
                 setResults(reportResults);
                 setStep(AppStep.RESULTS);
             }, 500);
@@ -47,13 +48,24 @@ const ExportDuplicatesTool: React.FC = () => {
                         onFileUpload={handleFileUpload}
                     />
                 );
+            case AppStep.PREVIEW:
+                if (file) {
+                    return (
+                        <FilePreview
+                            file={file}
+                            onConfirm={() => setStep(AppStep.SELECT_COLUMNS)}
+                            onBack={handleRestart}
+                        />
+                    );
+                }
+                return null;
             case AppStep.SELECT_COLUMNS:
                 if (file) {
                     return (
                         <ColumnSelector
                             comparisonFile={file}
                             onCompare={handleProcess}
-                            onBack={handleRestart}
+                            onBack={() => setStep(AppStep.PREVIEW)}
                         />
                     );
                 }
