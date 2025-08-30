@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { ParsedFile, AppStep, NormalizationOptions, NormalizationRule, NormalizationFormat } from '../../types';
+import { ParsedFile, AppStep, NormalizationOptions, NormalizationRule, NormalizationFormat, DataQualityReport } from '../../types';
 import { FileUploader } from '../FileUploader';
 import { ResultsDisplay } from '../ResultsDisplay';
 import { normalizeData } from '../../services/dataCleaner';
@@ -9,6 +9,7 @@ import { ToolHeader } from '../ToolHeader';
 import { ProcessingIndicator } from '../ProcessingIndicator';
 import { XCircleIcon } from './ui/Icons';
 import { FilePreview } from '../FilePreview';
+import { calculateDataQuality } from '../../services/qualityScorer';
 
 const RULE_DEFINITIONS: { format: NormalizationFormat, label: string }[] = [
     { format: 'phone_us', label: 'Phone Number (US)' },
@@ -170,11 +171,13 @@ const SmartNormalizationTool: React.FC = () => {
     const [step, setStep] = useState<AppStep>(AppStep.UPLOAD);
     const [file, setFile] = useState<ParsedFile | null>(null);
     const [dataHistory, setDataHistory] = useState<Record<string, any>[][]>([]);
+    const [qualityReport, setQualityReport] = useState<DataQualityReport | null>(null);
 
     const handleFileUpload = (uploadedFile: ParsedFile | null, uploadError: string | null) => {
         if (uploadedFile) {
             setFile(uploadedFile);
             setDataHistory([uploadedFile.data]);
+            setQualityReport(null);
             setStep(AppStep.PREVIEW);
         }
     };
@@ -184,7 +187,11 @@ const SmartNormalizationTool: React.FC = () => {
         if (file && currentData) {
             setStep(AppStep.PROCESSING);
             setTimeout(() => {
+                const beforeScore = calculateDataQuality(currentData);
                 const normalized = normalizeData(currentData, options);
+                const afterScore = calculateDataQuality(normalized);
+                
+                setQualityReport({ before: beforeScore, after: afterScore });
                 setDataHistory(prev => [...prev, normalized]);
                 setStep(AppStep.RESULTS);
             }, 500);
@@ -195,10 +202,12 @@ const SmartNormalizationTool: React.FC = () => {
         setStep(AppStep.UPLOAD);
         setFile(null);
         setDataHistory([]);
+        setQualityReport(null);
     };
 
     const handleUndo = () => {
         setDataHistory(prev => prev.slice(0, -1));
+        setQualityReport(null);
         setStep(AppStep.RESULTS);
     };
 
@@ -240,6 +249,7 @@ const SmartNormalizationTool: React.FC = () => {
                         headers={file.headers}
                         tabs={[{ title: 'Normalized Data', data: processedData, badgeType: 'success' }]}
                         fileForExportName="normalized_data"
+                        qualityScore={qualityReport || undefined}
                         onRestart={handleRestart}
                         onUndo={handleUndo}
                         canUndo={dataHistory.length > 1}

@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from './tools/ui/Button';
 import { DownloadIcon, ArchiveIcon, SpinnerIcon } from './tools/ui/Icons';
 import { exportFile, exportTabsAsZip } from '../services/fileProcessor';
+import { DataQualityReport } from '../types';
 
 interface ResultTab {
     title: string;
@@ -20,6 +21,7 @@ interface ResultsDisplayProps {
   restartButtonText?: string;
   onUndo?: () => void;
   canUndo?: boolean;
+  qualityScore?: DataQualityReport;
 }
 
 const Badge: React.FC<{ type: ResultTab['badgeType'], count: number }> = ({ type, count }) => {
@@ -32,9 +34,35 @@ const Badge: React.FC<{ type: ResultTab['badgeType'], count: number }> = ({ type
     return <span className={`${baseClasses} ${styles[type || 'default']}`}>{count}</span>
 }
 
+const QualityScoreDisplay: React.FC<{ score: DataQualityReport }> = ({ score }) => {
+    const improvement = score.after - score.before;
+    const improvementColor = improvement > 0 ? 'text-green-400' : improvement < 0 ? 'text-red-400' : 'text-gray-400';
+    const improvementSign = improvement > 0 ? '+' : '';
+
+    return (
+        <div className="mb-4 p-4 bg-white/5 rounded-lg border border-white/10 animate-slide-in">
+            <h4 className="text-lg font-semibold text-gray-200 mb-2">Data Quality Score</h4>
+            <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                    <p className="text-sm text-gray-400">Before</p>
+                    <p className="text-3xl font-bold text-gray-300">{score.before}<span className="text-lg">%</span></p>
+                </div>
+                <div>
+                    <p className="text-sm text-gray-400">After</p>
+                    <p className="text-3xl font-bold text-blue-400">{score.after}<span className="text-lg">%</span></p>
+                </div>
+                <div>
+                    <p className="text-sm text-gray-400">Improvement</p>
+                    <p className={`text-3xl font-bold ${improvementColor}`}>{improvementSign}{improvement}<span className="text-lg">%</span></p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ 
     title, description, headers, tabs, fileForExportName, onRestart, restartButtonText = "Start Over",
-    onUndo, canUndo
+    onUndo, canUndo, qualityScore
 }) => {
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [isZipping, setIsZipping] = useState(false);
@@ -84,6 +112,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
+        {qualityScore && <QualityScoreDisplay score={qualityScore} />}
         <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
             {showTabs && (
                 <div className="border-b border-white/10">

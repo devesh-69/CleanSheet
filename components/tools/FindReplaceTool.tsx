@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ParsedFile, AppStep, FindReplaceOptions } from '../../types';
+import { ParsedFile, AppStep, FindReplaceOptions, DataQualityReport } from '../../types';
 import { FileUploader } from '../FileUploader';
 import { ResultsDisplay } from '../ResultsDisplay';
 import { findAndReplace } from '../../services/dataCleaner';
@@ -10,6 +10,7 @@ import { Toggle } from './ui/Toggle';
 import { ToolHeader } from '../ToolHeader';
 import { ProcessingIndicator } from '../ProcessingIndicator';
 import { FilePreview } from '../FilePreview';
+import { calculateDataQuality } from '../../services/qualityScorer';
 
 const OptionsSelector: React.FC<{
     file: ParsedFile,
@@ -138,11 +139,13 @@ const FindReplaceTool: React.FC = () => {
     const [step, setStep] = useState<AppStep>(AppStep.UPLOAD);
     const [file, setFile] = useState<ParsedFile | null>(null);
     const [dataHistory, setDataHistory] = useState<Record<string, any>[][]>([]);
+    const [qualityReport, setQualityReport] = useState<DataQualityReport | null>(null);
 
     const handleFileUpload = (uploadedFile: ParsedFile | null, uploadError: string | null) => {
         if (uploadedFile) {
             setFile(uploadedFile);
             setDataHistory([uploadedFile.data]);
+            setQualityReport(null);
             setStep(AppStep.PREVIEW);
         }
     };
@@ -152,7 +155,11 @@ const FindReplaceTool: React.FC = () => {
         if (file && currentData) {
             setStep(AppStep.PROCESSING);
             setTimeout(() => {
+                const beforeScore = calculateDataQuality(currentData);
                 const cleanedData = findAndReplace(currentData, options);
+                const afterScore = calculateDataQuality(cleanedData);
+
+                setQualityReport({ before: beforeScore, after: afterScore });
                 setDataHistory(prev => [...prev, cleanedData]);
                 setStep(AppStep.RESULTS);
             }, 500);
@@ -163,10 +170,12 @@ const FindReplaceTool: React.FC = () => {
         setStep(AppStep.UPLOAD);
         setFile(null);
         setDataHistory([]);
+        setQualityReport(null);
     };
 
     const handleUndo = () => {
         setDataHistory(prev => prev.slice(0, -1));
+        setQualityReport(null);
         setStep(AppStep.RESULTS);
     };
 
@@ -208,6 +217,7 @@ const FindReplaceTool: React.FC = () => {
                         headers={file.headers}
                         tabs={[{ title: 'Processed Data', data: processedData, badgeType: 'success' }]}
                         fileForExportName={file.name}
+                        qualityScore={qualityReport || undefined}
                         onRestart={handleRestart}
                         onUndo={handleUndo}
                         canUndo={dataHistory.length > 1}

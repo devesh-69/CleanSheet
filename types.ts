@@ -210,6 +210,10 @@ export type NormalizationOptions = {
     rules: NormalizationRule[];
 };
 
+export type DataQualityReport = {
+    before: number; // 0-100
+    after: number;  // 0-100
+};
 
 // --- Dashboard Types ---
 export type FilterOperator = 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'starts_with' | 'ends_with' | '>' | '<' | '>=' | '<=';
