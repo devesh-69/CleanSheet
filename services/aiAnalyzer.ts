@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type } from "https://esm.sh/@google/generative-ai";
 import { ParsedFile, DataStory } from '../types';
 
 // Ensure the environment variable is handled correctly
