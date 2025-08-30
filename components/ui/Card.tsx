@@ -23,18 +23,14 @@ export const CardHeader: React.FC<CardHeaderProps> = ({ children, className }) =
     return <div className={`p-6 border-b border-white/10 ${className}`}>{children}</div>
 };
 
-// FIX: Update CardContent to accept a ref by using React.forwardRef.
-// This allows parent components to get a reference to the underlying div,
-// which is needed for functionality like PDF exporting in DataStorytellingTool.
-export const CardContent = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, children, ...props }, ref) => (
-  <div ref={ref} className={`p-6 ${className}`} {...props}>
-    {children}
-  </div>
-));
-CardContent.displayName = "CardContent";
+interface CardContentProps {
+    children: React.ReactNode;
+    className?: string;
+}
+
+export const CardContent: React.FC<CardContentProps> = ({ children, className }) => {
+    return <div className={`p-6 ${className}`}>{children}</div>
+};
 
 interface CardFooterProps {
     children: React.ReactNode;
